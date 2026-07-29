@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { copy } from "../copy/en";
-import { apiClient, PlanPath, RoleRow } from "../lib/apiClient";
+import { apiClient, type PlanPath, type RoleRow } from "../lib/apiClient";
+import { appState } from "../lib/appState";
+import { logger } from "../lib/logger";
 import { GlassPanel } from "../components/ui/GlassPanel";
 import { PlainChatBubble } from "../components/ui/PlainChatBubble";
 import { StepDots } from "../components/ui/StepDots";
@@ -14,20 +16,25 @@ type Props = {
 };
 
 export function StudioView({ idea, onBuilt, setStatus }: Props) {
-  const [step, setStep] = useState(0);
+  const saved = appState.get().studio;
+  const [step, setStep] = useState(saved.step);
   const [draft, setDraft] = useState(idea);
   const [questions, setQuestions] = useState<string[]>([]);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>(saved.answers);
   const [answer, setAnswer] = useState("");
-  const [qIndex, setQIndex] = useState(0);
+  const [qIndex, setQIndex] = useState(saved.qIndex);
   const [paths, setPaths] = useState<PlanPath[]>([]);
-  const [activePath, setActivePath] = useState<PlanPath["id"]>("happy");
+  const [activePath, setActivePath] = useState<PlanPath["id"]>(saved.activePath);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [building, setBuilding] = useState(false);
 
   useEffect(() => {
     setDraft(idea);
   }, [idea]);
+
+  useEffect(() => {
+    appState.patchStudio({ step, answers, qIndex, activePath });
+  }, [step, answers, qIndex, activePath]);
 
   useEffect(() => {
     if (step === 1 && !questions.length) {
@@ -52,6 +59,13 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
         ? copy.pathsAscii.ambiguity
         : copy.pathsAscii.failure;
 
+  function goStep(next: number) {
+    setStep(next);
+    logger.info("studio", `Wizard step ${next + 1}`, {
+      label: copy.studio.steps[next],
+    });
+  }
+
   async function finishBuild() {
     setBuilding(true);
     setStatus(copy.statusThinking);
@@ -69,7 +83,7 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
         <GlassPanel className="space-y-4 p-6">
           <h2 className="font-display text-xl font-semibold">{copy.studio.steps[0]}</h2>
           <p className="text-sm text-[var(--vap-muted)]">{draft}</p>
-          <VapButton onClick={() => setStep(1)}>{copy.studio.next}</VapButton>
+          <VapButton onClick={() => goStep(1)}>{copy.studio.next}</VapButton>
         </GlassPanel>
       )}
 
@@ -80,7 +94,9 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
             {questions.slice(0, qIndex + 1).map((q, i) => (
               <div key={q} className="space-y-2">
                 <PlainChatBubble role="assistant">{q}</PlainChatBubble>
-                {answers[i] && <PlainChatBubble role="user">{answers[i]}</PlainChatBubble>}
+                {answers[i] && (
+                  <PlainChatBubble role="user">{answers[i]}</PlainChatBubble>
+                )}
               </div>
             ))}
           </div>
@@ -98,7 +114,8 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
                   const next = [...answers, answer.trim()];
                   setAnswers(next);
                   setAnswer("");
-                  if (qIndex + 1 >= questions.length) setStep(2);
+                  logger.info("studio", "Answer saved", { index: qIndex });
+                  if (qIndex + 1 >= questions.length) goStep(2);
                   else setQIndex(qIndex + 1);
                 }}
               >
@@ -139,10 +156,17 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
             {pathCopy}
           </pre>
           <div className="flex gap-2">
-            <VapButton variant="ghost" onClick={() => setStep(1)}>
+            <VapButton variant="ghost" onClick={() => goStep(1)}>
               {copy.studio.back}
             </VapButton>
-            <VapButton onClick={() => setStep(3)}>{copy.studio.approve}</VapButton>
+            <VapButton
+              onClick={() => {
+                logger.info("studio", "Plan approved", { path: activePath });
+                goStep(3);
+              }}
+            >
+              {copy.studio.approve}
+            </VapButton>
           </div>
         </GlassPanel>
       )}
@@ -158,17 +182,19 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-display font-semibold">{r.name}</p>
-                  <span className="text-xs font-medium text-[var(--li-blue)]">{r.tierLabel}</span>
+                  <span className="text-xs font-medium text-[var(--li-blue)]">
+                    {r.tierLabel}
+                  </span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--vap-muted)]">{r.blurb}</p>
               </li>
             ))}
           </ul>
           <div className="flex gap-2">
-            <VapButton variant="ghost" onClick={() => setStep(2)}>
+            <VapButton variant="ghost" onClick={() => goStep(2)}>
               {copy.studio.back}
             </VapButton>
-            <VapButton onClick={() => setStep(4)}>{copy.studio.next}</VapButton>
+            <VapButton onClick={() => goStep(4)}>{copy.studio.next}</VapButton>
           </div>
         </GlassPanel>
       )}

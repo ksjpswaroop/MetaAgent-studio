@@ -4,14 +4,25 @@
 
 ```
 apps/desktop/src/
-  App.tsx                 # view state switch
+  App.tsx                 # view switch (reads persisted ui state)
   copy/en.ts              # all user-facing strings
-  lib/apiClient.ts        # mock | http seam
+  hooks/useAppState.ts    # subscribe to persisted UI state
+  hooks/useActivityLog.ts # subscribe to activity log
+  lib/storage.ts          # localStorage helpers (mas.* keys)
+  lib/appState.ts         # view, idea, wizard, settings — stateful
+  lib/logger.ts           # structured activity log (persisted)
+  lib/apiClient.ts        # mock | http seam + session/check/kits/connectors
   styles/tokens.css
   components/shell/
   components/ui/
   views/                  # Home, Studio, Check, Improve, Kits, Connections, Settings
 ```
+
+## State & logging
+
+- UI state (`view`, idea, studio wizard, settings) persists via `appState` → `localStorage` (`mas.ui_state`).
+- Domain data (session, check result, kits, connectors, MCP) persists via `apiClient` → `mas.session`, `mas.check`, etc.
+- `logger` appends structured entries (`level`, `source`, `message`, optional `data`) to `mas.activity_log` and mirrors to the browser console. View / clear under Settings → Activity log.
 
 ## Wiring FastAPI
 

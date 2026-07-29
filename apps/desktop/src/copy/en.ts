@@ -112,6 +112,10 @@ export const copy = {
     export: "Save finished kits to",
     developer: "Developer",
     greet: "Test Rust bridge",
+    activity: "Activity log",
+    activityEmpty: "Nothing logged yet — actions will show up here.",
+    activityClear: "Clear log",
+    activitySupport: "Recent actions on this computer. Kept after refresh.",
   },
   pathsAscii: {
     happy: "Check input → Find notes → Write reply → Send safely",

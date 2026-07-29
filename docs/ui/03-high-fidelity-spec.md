@@ -67,7 +67,8 @@ Step dots + title. Steps:
 
 ### Settings
 
-- License key, Local/Cloud brain, export folder
+- License key, Local/Cloud brain, export folder (persisted)
+- Activity log (recent actions, clearable, survives refresh)
 - Collapsed “Developer” with Tauri greet test
 
 ## Component inventory

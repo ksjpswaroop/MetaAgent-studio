@@ -1,3 +1,6 @@
+import { logger } from "./logger";
+import { migrateLegacyKey, storageGet, storageSet } from "./storage";
+
 export type SessionDraft = {
   id: string;
   projectName: string;
@@ -127,13 +130,29 @@ const defaultMcp: McpServerItem[] = [
   },
 ];
 
+migrateLegacyKey("mas_kits", "kits");
+migrateLegacyKey("mas_connectors", "connectors");
+migrateLegacyKey("mas_mcp", "mcp");
+
 const memory = {
-  session: null as SessionDraft | null,
-  kits: [] as KitItem[],
-  check: null as CheckResult | null,
+  session: storageGet<SessionDraft | null>("session", null),
+  kits: storageGet<KitItem[]>("kits", []),
+  check: storageGet<CheckResult | null>("check", null),
   connectors: null as ConnectorItem[] | null,
   mcp: null as McpServerItem[] | null,
 };
+
+function persistSession() {
+  storageSet("session", memory.session);
+}
+
+function persistCheck() {
+  storageSet("check", memory.check);
+}
+
+function persistKits() {
+  storageSet("kits", memory.kits);
+}
 
 function mergeDefaultConnectors(stored: ConnectorItem[]): ConnectorItem[] {
   const byId = new Map(stored.map((c) => [c.id, c]));
@@ -148,44 +167,28 @@ function mergeDefaultConnectors(stored: ConnectorItem[]): ConnectorItem[] {
 
 function loadConnectors(): ConnectorItem[] {
   if (memory.connectors) return memory.connectors;
-  try {
-    const raw = localStorage.getItem("mas_connectors");
-    memory.connectors = raw
-      ? mergeDefaultConnectors(JSON.parse(raw) as ConnectorItem[])
-      : [...defaultConnectors];
-  } catch {
-    memory.connectors = [...defaultConnectors];
-  }
+  const stored = storageGet<ConnectorItem[] | null>("connectors", null);
+  memory.connectors = stored
+    ? mergeDefaultConnectors(stored)
+    : [...defaultConnectors];
   return memory.connectors;
 }
 
 function saveConnectors(list: ConnectorItem[]) {
   memory.connectors = list;
-  try {
-    localStorage.setItem("mas_connectors", JSON.stringify(list));
-  } catch {
-    /* ignore */
-  }
+  storageSet("connectors", list);
 }
 
 function loadMcp(): McpServerItem[] {
   if (memory.mcp) return memory.mcp;
-  try {
-    const raw = localStorage.getItem("mas_mcp");
-    memory.mcp = raw ? (JSON.parse(raw) as McpServerItem[]) : [...defaultMcp];
-  } catch {
-    memory.mcp = [...defaultMcp];
-  }
+  const stored = storageGet<McpServerItem[] | null>("mcp", null);
+  memory.mcp = stored ?? [...defaultMcp];
   return memory.mcp;
 }
 
 function saveMcp(list: McpServerItem[]) {
   memory.mcp = list;
-  try {
-    localStorage.setItem("mas_mcp", JSON.stringify(list));
-  } catch {
-    /* ignore */
-  }
+  storageSet("mcp", list);
 }
 
 function uid(prefix: string) {
@@ -193,12 +196,24 @@ function uid(prefix: string) {
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${base}${path}`, {
-    headers: { "content-type": "application/json", ...(init?.headers || {}) },
-    ...init,
-  });
-  if (!res.ok) throw new Error(`${res.status} ${path}`);
-  return res.json() as Promise<T>;
+  const method = init?.method ?? "GET";
+  logger.debug("http", `${method} ${path}`);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      headers: { "content-type": "application/json", ...(init?.headers || {}) },
+      ...init,
+    });
+    if (!res.ok) {
+      logger.error("http", `${res.status} ${path}`);
+      throw new Error(`${res.status} ${path}`);
+    }
+    return res.json() as Promise<T>;
+  } catch (err) {
+    logger.error("http", `Request failed ${path}`, {
+      error: String(err),
+    });
+    throw err;
+  }
 }
 
 export const apiClient = {
@@ -208,7 +223,10 @@ export const apiClient = {
     if (mode === "http") {
       const project = await http<{ id: string; name: string }>("/api/v1/projects", {
         method: "POST",
-        body: JSON.stringify({ name: idea.slice(0, 40) || "My helper", description: idea }),
+        body: JSON.stringify({
+          name: idea.slice(0, 40) || "My helper",
+          description: idea,
+        }),
       });
       const session = await http<{ id: string }>("/api/v1/sessions", {
         method: "POST",
@@ -220,6 +238,8 @@ export const apiClient = {
         idea,
         stage: "created",
       };
+      persistSession();
+      logger.info("session", "Session created", { id: memory.session.id });
       return memory.session;
     }
     memory.session = {
@@ -228,6 +248,8 @@ export const apiClient = {
       idea,
       stage: "created",
     };
+    persistSession();
+    logger.info("session", "Session created (mock)", { id: memory.session.id });
     return memory.session;
   },
 
@@ -236,6 +258,7 @@ export const apiClient = {
   },
 
   async discoveryQuestions(): Promise<string[]> {
+    logger.info("studio", "Loaded discovery questions");
     return [
       "When should this helper wake up? (message arrives / on a schedule / when you ask)",
       "What outside tools does it need?",
@@ -245,6 +268,7 @@ export const apiClient = {
   },
 
   async planPaths(): Promise<PlanPath[]> {
+    logger.info("studio", "Loaded plan paths");
     return [
       {
         id: "happy",
@@ -265,6 +289,7 @@ export const apiClient = {
   },
 
   async roles(): Promise<RoleRow[]> {
+    logger.info("studio", "Loaded role assignments");
     return [
       {
         name: "Gatekeeper",
@@ -286,7 +311,6 @@ export const apiClient = {
 
   async buildKit(): Promise<CheckResult> {
     if (mode === "http" && memory.session) {
-      // Placeholder: real wiring maps to package + simulate endpoints
       await http(`/api/v1/package/${memory.session.id}/build`, {
         method: "POST",
         body: JSON.stringify({ run_verify: true }),
@@ -298,7 +322,12 @@ export const apiClient = {
       testsOk: true,
       zipOk: true,
     };
-    if (memory.session) memory.session.stage = "scaffolded";
+    if (memory.session) {
+      memory.session = { ...memory.session, stage: "scaffolded" };
+      persistSession();
+    }
+    persistCheck();
+    logger.info("package", "Kit built", { score: memory.check.overall });
     return memory.check;
   },
 
@@ -338,22 +367,15 @@ export const apiClient = {
       name,
       score: memory.check?.overall ?? 0.7,
     };
-    memory.kits.unshift(kit);
-    try {
-      localStorage.setItem("mas_kits", JSON.stringify(memory.kits));
-    } catch {
-      /* ignore */
-    }
+    memory.kits = [kit, ...memory.kits];
+    persistKits();
+    logger.info("kits", "Kit saved", { id: kit.id, name: kit.name });
     return kit;
   },
 
   listKits(): KitItem[] {
     if (!memory.kits.length) {
-      try {
-        memory.kits = JSON.parse(localStorage.getItem("mas_kits") || "[]");
-      } catch {
-        memory.kits = [];
-      }
+      memory.kits = storageGet<KitItem[]>("kits", []);
     }
     return memory.kits;
   },
@@ -365,23 +387,22 @@ export const apiClient = {
           method: "POST",
           body: JSON.stringify({ license_key: key }),
         });
+        logger.info("license", "Pro unlocked");
         return { ok: true, message: "Pro unlocked" };
       } catch {
+        logger.warn("license", "Activation failed");
         return { ok: false, message: "Could not activate" };
       }
     }
     const ok = /^MAS-PRO-/i.test(key.trim());
-    return { ok, message: ok ? "Pro unlocked (mock)" : "Use MAS-PRO-XXXX-XXXX-XXXX" };
+    logger.info("license", ok ? "Pro unlocked (mock)" : "Invalid license format");
+    return {
+      ok,
+      message: ok ? "Pro unlocked (mock)" : "Use MAS-PRO-XXXX-XXXX-XXXX",
+    };
   },
 
   async listConnectors(): Promise<ConnectorItem[]> {
-    if (mode === "http") {
-      try {
-        return await http<ConnectorItem[]>("/api/v1/connectors");
-      } catch {
-        /* fall through to mock */
-      }
-    }
     return loadConnectors().map((c) => ({ ...c }));
   },
 
@@ -391,10 +412,14 @@ export const apiClient = {
   ): Promise<ConnectorItem> {
     if (mode === "http") {
       try {
-        return await http<ConnectorItem>(`/api/v1/connectors/${id}`, {
+        const updated = await http<ConnectorItem>(`/api/v1/connectors/${id}`, {
           method: "PATCH",
           body: JSON.stringify({ connected }),
         });
+        logger.info("connectors", connected ? "Connected" : "Disconnected", {
+          id,
+        });
+        return updated;
       } catch {
         /* fall through */
       }
@@ -403,7 +428,15 @@ export const apiClient = {
     const next = list.map((c) => (c.id === id ? { ...c, connected } : c));
     saveConnectors(next);
     const found = next.find((c) => c.id === id);
-    if (!found) throw new Error("connector not found");
+    if (!found) {
+      logger.error("connectors", "Connector not found", { id });
+      throw new Error("connector not found");
+    }
+    logger.info(
+      "connectors",
+      connected ? `${found.name} connected` : `${found.name} disconnected`,
+      { id },
+    );
     return found;
   },
 
@@ -413,7 +446,7 @@ export const apiClient = {
   }): Promise<ConnectorItem> {
     if (mode === "http") {
       try {
-        return await http<ConnectorItem>("/api/v1/connectors", {
+        const created = await http<ConnectorItem>("/api/v1/connectors", {
           method: "POST",
           body: JSON.stringify({
             kind: "custom",
@@ -421,6 +454,8 @@ export const apiClient = {
             base_url: input.baseUrl,
           }),
         });
+        logger.info("connectors", "Custom connector added", { id: created.id });
+        return created;
       } catch {
         /* fall through */
       }
@@ -434,38 +469,41 @@ export const apiClient = {
       baseUrl: input.baseUrl,
     };
     saveConnectors([item, ...loadConnectors()]);
+    logger.info("connectors", "Custom connector added", { id: item.id });
     return item;
   },
 
   async testConnector(id: string): Promise<{ ok: boolean; message: string }> {
     if (mode === "http") {
       try {
-        return await http<{ ok: boolean; message: string }>(
+        const res = await http<{ ok: boolean; message: string }>(
           `/api/v1/connectors/${id}/test`,
           { method: "POST" },
         );
+        logger.info("connectors", res.ok ? "Test ok" : "Test failed", { id });
+        return res;
       } catch {
+        logger.warn("connectors", "Test failed", { id });
         return { ok: false, message: "Couldn’t reach it — check the details" };
       }
     }
     const c = loadConnectors().find((x) => x.id === id);
-    if (!c) return { ok: false, message: "Couldn’t reach it — check the details" };
+    if (!c) {
+      logger.warn("connectors", "Test failed — missing", { id });
+      return { ok: false, message: "Couldn’t reach it — check the details" };
+    }
+    const ok = c.connected || c.kind === "webhook" || c.kind === "hermes";
+    logger.info("connectors", ok ? "Test ok" : "Test failed", {
+      id,
+      name: c.name,
+    });
     return {
-      ok: c.connected || c.kind === "webhook",
-      message: c.connected || c.kind === "webhook"
-        ? "Looks good"
-        : "Connect first, then test",
+      ok,
+      message: ok ? "Looks good" : "Connect first, then test",
     };
   },
 
   async listMcpServers(): Promise<McpServerItem[]> {
-    if (mode === "http") {
-      try {
-        return await http<McpServerItem[]>("/api/v1/mcp/servers");
-      } catch {
-        /* fall through */
-      }
-    }
     return loadMcp().map((s) => ({ ...s }));
   },
 
@@ -483,7 +521,13 @@ export const apiClient = {
     const next = loadMcp().map((s) => (s.id === id ? { ...s, enabled } : s));
     saveMcp(next);
     const found = next.find((s) => s.id === id);
-    if (!found) throw new Error("mcp server not found");
+    if (!found) {
+      logger.error("mcp", "Server not found", { id });
+      throw new Error("mcp server not found");
+    }
+    logger.info("mcp", enabled ? `${found.name} on` : `${found.name} off`, {
+      id,
+    });
     return found;
   },
 
@@ -514,6 +558,7 @@ export const apiClient = {
       enabled: true,
     };
     saveMcp([item, ...loadMcp()]);
+    logger.info("mcp", "Server added", { id: item.id, name: item.name });
     return item;
   },
 
@@ -521,12 +566,14 @@ export const apiClient = {
     if (mode === "http") {
       try {
         await http(`/api/v1/mcp/servers/${id}`, { method: "DELETE" });
+        logger.info("mcp", "Server removed", { id });
         return;
       } catch {
         /* fall through */
       }
     }
     saveMcp(loadMcp().filter((s) => s.id !== id));
+    logger.info("mcp", "Server removed", { id });
   },
 
   async testMcpServer(id: string): Promise<{ ok: boolean; message: string }> {
@@ -537,12 +584,17 @@ export const apiClient = {
           { method: "POST" },
         );
       } catch {
+        logger.warn("mcp", "Test failed", { id });
         return { ok: false, message: "Couldn’t reach it — check the details" };
       }
     }
     const s = loadMcp().find((x) => x.id === id);
-    if (!s) return { ok: false, message: "Couldn’t reach it — check the details" };
+    if (!s) {
+      logger.warn("mcp", "Test failed — missing", { id });
+      return { ok: false, message: "Couldn’t reach it — check the details" };
+    }
     const ok = Boolean(s.enabled && (s.command || s.url));
+    logger.info("mcp", ok ? "Test ok" : "Test failed", { id, name: s.name });
     return {
       ok,
       message: ok ? "Looks good" : "Couldn’t reach it — check the details",
