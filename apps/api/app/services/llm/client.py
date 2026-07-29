@@ -89,10 +89,13 @@ async def chat_json(
             )
             await db.commit()
 
-    raise HTTPException(
-        status_code=503,
-        detail="All LLM providers failed: " + "; ".join(errors),
-    )
+    detail = "All LLM providers failed: " + "; ".join(errors)
+    if any("Connection" in e or "ConnectError" in e or "11434" in e for e in errors):
+        detail = (
+            "Ollama is offline or unreachable at http://127.0.0.1:11434. "
+            "Start it with `ollama serve`, then retry. Details: " + "; ".join(errors)
+        )
+    raise HTTPException(status_code=503, detail=detail)
 
 
 async def _dispatch(prov: LlmProvider, system: str, user: str) -> str:

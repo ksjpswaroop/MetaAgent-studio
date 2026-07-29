@@ -12,13 +12,56 @@ from app.utils.ids import new_id
 from app.utils.time import utc_now
 
 
+_FALLBACK_QUESTIONS = [
+    {
+        "question_key": "trigger_type",
+        "content": "When should this helper wake up? (message arrives / on a schedule / when you ask)",
+    },
+    {
+        "question_key": "external_tools",
+        "content": "What outside tools does it need? (email, docs, chat, webhooks…)",
+    },
+    {
+        "question_key": "human_in_loop",
+        "content": "Should a person approve before it sends anything?",
+    },
+    {
+        "question_key": "fallback_strategy",
+        "content": "If a tool is busy or fails, what should happen?",
+    },
+]
+
+
+def _normalize_questions(data: dict) -> list[dict]:
+    raw = data.get("questions") or []
+    out: list[dict] = []
+    for i, q in enumerate(raw):
+        if not isinstance(q, dict):
+            continue
+        content = (q.get("content") or q.get("question") or q.get("text") or "").strip()
+        key = (q.get("question_key") or q.get("key") or f"q_{i}").strip()
+        if not content:
+            continue
+        out.append({"question_key": key, "content": content})
+    return out or list(_FALLBACK_QUESTIONS)
+
+
 async def start_discovery(db: AsyncSession, session: StudioSession) -> list[DiscoveryMessage]:
-    data = await chat_json(
-        db,
-        task="discovery_questions",
-        system="You are RequirementsArchitectAgent. Return JSON with questions array.",
-        user=session.raw_user_prompt,
-    )
+    try:
+        data = await chat_json(
+            db,
+            task="discovery_questions",
+            system=(
+                "You are RequirementsArchitectAgent. Return ONLY JSON like "
+                '{"questions":[{"question_key":"trigger_type","content":"..."},...]} '
+                "with 3-5 plain-language questions. Each item MUST include non-empty "
+                "question_key and content."
+            ),
+            user=session.raw_user_prompt,
+        )
+    except Exception:
+        data = {"questions": _FALLBACK_QUESTIONS}
+    questions = _normalize_questions(data if isinstance(data, dict) else {})
     session.stage = "discovery"
     session.updated_at = utc_now()
     created: list[DiscoveryMessage] = []
@@ -32,13 +75,13 @@ async def start_discovery(db: AsyncSession, session: StudioSession) -> list[Disc
     )
     db.add(intro)
     created.append(intro)
-    for q in data.get("questions", []):
+    for q in questions:
         msg = DiscoveryMessage(
             id=new_id("dmsg"),
             session_id=session.id,
             role="assistant",
-            content=q.get("content", ""),
-            question_key=q.get("question_key"),
+            content=q["content"],
+            question_key=q["question_key"],
             created_at=utc_now(),
         )
         db.add(msg)
@@ -47,11 +90,55 @@ async def start_discovery(db: AsyncSession, session: StudioSession) -> list[Disc
     return created
 
 
+def _normalize_scope(raw: dict | None, prompt: str) -> dict:
+    base = {
+        "project_name": (prompt[:48] or "My helper").strip() or "My helper",
+        "primary_goal": prompt[:200] or "Automate workflow",
+        "trigger_type": "manual",
+        "external_tools": ["http_api"],
+        "human_in_loop": True,
+        "fallback_strategy": "queue and retry",
+    }
+    if not isinstance(raw, dict):
+        return base
+    out = {**base, **{k: v for k, v in raw.items() if v is not None and v != ""}}
+    trigger = str(out.get("trigger_type") or "manual").lower()
+    if trigger not in {"webhook", "cron", "manual"}:
+        # Map plain language to enum
+        if "schedule" in trigger or "cron" in trigger:
+            trigger = "cron"
+        elif "message" in trigger or "webhook" in trigger or "arrive" in trigger:
+            trigger = "webhook"
+        else:
+            trigger = "manual"
+    out["trigger_type"] = trigger
+    tools = out.get("external_tools") or []
+    if isinstance(tools, str):
+        tools = [t.strip() for t in tools.split(",") if t.strip()]
+    normalized_tools: list[str] = []
+    if isinstance(tools, list):
+        for t in tools:
+            if isinstance(t, str) and t.strip():
+                normalized_tools.append(t.strip())
+            elif isinstance(t, dict):
+                name = t.get("name") or t.get("tool") or t.get("id")
+                if name:
+                    normalized_tools.append(str(name))
+    out["external_tools"] = normalized_tools or ["http_api"]
+    out["human_in_loop"] = bool(out.get("human_in_loop"))
+    out["project_name"] = str(out.get("project_name") or base["project_name"])[:80]
+    out["primary_goal"] = str(out.get("primary_goal") or base["primary_goal"])
+    out["fallback_strategy"] = str(
+        out.get("fallback_strategy") or base["fallback_strategy"]
+    )
+    return out
+
+
 async def finalize_from_transcript(
     db: AsyncSession, session: StudioSession, override: dict | None = None
 ) -> dict:
     if override:
-        scope = override
+        scope = _normalize_scope(override, session.raw_user_prompt)
     else:
         rows = (
             await db.scalars(
@@ -64,14 +151,22 @@ async def finalize_from_transcript(
             {"role": r.role, "question_key": r.question_key, "content": r.content}
             for r in rows
         ]
-        scope = await chat_json(
-            db,
-            task="discovery_finalize",
-            system="Synthesize a ScopeEnvelope JSON from the Q&A transcript.",
-            user=json.dumps(
-                {"prompt": session.raw_user_prompt, "transcript": transcript}
-            ),
-        )
+        try:
+            raw = await chat_json(
+                db,
+                task="discovery_finalize",
+                system=(
+                    "Synthesize a ScopeEnvelope JSON. Required keys: project_name, "
+                    "primary_goal, trigger_type (webhook|cron|manual), external_tools "
+                    "(array), human_in_loop (bool), fallback_strategy."
+                ),
+                user=json.dumps(
+                    {"prompt": session.raw_user_prompt, "transcript": transcript}
+                ),
+            )
+        except Exception:
+            raw = {}
+        scope = _normalize_scope(raw if isinstance(raw, dict) else {}, session.raw_user_prompt)
 
     existing = await db.scalar(
         select(ScopeEnvelopeRow).where(ScopeEnvelopeRow.session_id == session.id)

@@ -1,0 +1,52 @@
+{
+  "edge_cases": [
+    {
+      "category": "timeout",
+      "title": "KB timeout",
+      "description": "Search Knowledge Base exceeds timeout",
+      "agent_name": "RetrievalSpecialist",
+      "step_name": "Search Knowledge Base",
+      "input_fixture": {
+        "query": "x",
+        "force_timeout": true
+      },
+      "expected_behavior": "Fallback queue"
+    },
+    {
+      "category": "partial_data",
+      "title": "Missing customer_id",
+      "description": "Payload missing required id",
+      "agent_name": "RequirementsValidator",
+      "step_name": "Validate Payload & Auth",
+      "input_fixture": {
+        "payload": {}
+      },
+      "expected_behavior": "Clarify missing fields"
+    },
+    {
+      "category": "schema_drift",
+      "title": "Unexpected nested field",
+      "description": "Extra unknown keys in payload",
+      "agent_name": "RequirementsValidator",
+      "step_name": "Validate Payload & Auth",
+      "input_fixture": {
+        "payload": {
+          "extra": true
+        }
+      },
+      "expected_behavior": "Reject or strip extras"
+    },
+    {
+      "category": "tool_failure",
+      "title": "Emit channel down",
+      "description": "Outbound channel 503",
+      "agent_name": "DraftSynthesizer",
+      "step_name": "Post-execution Gates & Emit",
+      "input_fixture": {
+        "draft": "hi",
+        "emit_fail": true
+      },
+      "expected_behavior": "Retry with backoff"
+    }
+  ]
+}

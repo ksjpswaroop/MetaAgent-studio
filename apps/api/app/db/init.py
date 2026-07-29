@@ -19,7 +19,7 @@ DEFAULT_SETTINGS = {
     "export_path": settings.default_export_path,
     "token_budget": settings.token_budget,
     "http_timeout_seconds": settings.http_timeout_seconds,
-    "default_model": "qwen2.5-coder:7b",
+    "default_model": "qwen2.5-coder:1.5b",
     "telemetry_enabled": False,
 }
 
@@ -31,7 +31,7 @@ DEFAULT_PROVIDERS = [
         "base_url": "http://127.0.0.1:11434",
         "api_key_env_var": None,
         "priority": 10,
-        "default_model": "qwen2.5-coder:7b",
+        "default_model": "qwen2.5-coder:1.5b",
     },
     {
         "id": "prov_anthropic",

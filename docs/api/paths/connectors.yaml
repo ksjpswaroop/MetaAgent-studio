@@ -1,0 +1,65 @@
+paths:
+  /api/v1/connectors:
+    get:
+      tags: [connectors]
+      summary: List app connectors
+      operationId: listConnectors
+      responses:
+        "200":
+          description: Connector list
+    post:
+      tags: [connectors]
+      summary: Add custom connector
+      operationId: createConnector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, kind]
+              properties:
+                name: { type: string }
+                kind:
+                  type: string
+                  enum: [hermes, gmail, slack, notion, sheets, webhook, custom]
+                base_url: { type: string }
+      responses:
+        "201":
+          description: Created connector
+  /api/v1/connectors/{connector_id}:
+    patch:
+      tags: [connectors]
+      summary: Update connector (e.g. connected flag)
+      operationId: updateConnector
+      parameters:
+        - { name: connector_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                connected: { type: boolean }
+                base_url: { type: string }
+      responses:
+        "200":
+          description: Updated connector
+  /api/v1/connectors/{connector_id}/test:
+    post:
+      tags: [connectors]
+      summary: Test connector reachability
+      operationId: testConnector
+      parameters:
+        - { name: connector_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }

@@ -1,0 +1,35 @@
+:root {
+  /* LinkedIn-inspired palette */
+  --li-blue: #0a66c2;
+  --li-blue-dark: #004182;
+  --li-blue-soft: #378fe9;
+  --li-sky: #70b5f9;
+  --li-success: #057642;
+  --li-warn: #915907;
+  --li-surface: #eef3f8;
+  --li-card: #ffffff;
+  --li-ink: #191919;
+  --li-muted: #56687a;
+  --li-border: #d0d9e3;
+
+  /* Component aliases (stable names used across UI) */
+  --vap-magenta: var(--li-blue);
+  --vap-cyan: var(--li-blue-soft);
+  --vap-peach: var(--li-warn);
+  --vap-lilac: var(--li-sky);
+  --vap-night: var(--li-surface);
+  --vap-ink: var(--li-ink);
+  --vap-muted: var(--li-muted);
+  --vap-success: var(--li-success);
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(10, 102, 194, 0.16);
+  --glass-blur: 14px;
+  --crt-opacity: 0.025;
+  --radius-panel: 1rem;
+  --radius-control: 0.75rem;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Outfit", system-ui, sans-serif;
+  --shadow-chrome: 0 8px 28px rgba(0, 65, 130, 0.1);
+}

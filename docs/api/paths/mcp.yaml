@@ -1,0 +1,79 @@
+paths:
+  /api/v1/mcp/servers:
+    get:
+      tags: [mcp]
+      summary: List MCP servers
+      operationId: listMcpServers
+      responses:
+        "200":
+          description: MCP server list
+    post:
+      tags: [mcp]
+      summary: Register an MCP server
+      operationId: createMcpServer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, transport]
+              properties:
+                name: { type: string }
+                transport:
+                  type: string
+                  enum: [stdio, sse, http]
+                command: { type: string }
+                args: { type: string }
+                url: { type: string }
+      responses:
+        "201":
+          description: Created MCP server
+  /api/v1/mcp/servers/{server_id}:
+    patch:
+      tags: [mcp]
+      summary: Update MCP server (e.g. enabled)
+      operationId: updateMcpServer
+      parameters:
+        - { name: server_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                name: { type: string }
+                command: { type: string }
+                args: { type: string }
+                url: { type: string }
+      responses:
+        "200":
+          description: Updated server
+    delete:
+      tags: [mcp]
+      summary: Remove MCP server
+      operationId: deleteMcpServer
+      parameters:
+        - { name: server_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204":
+          description: Deleted
+  /api/v1/mcp/servers/{server_id}/test:
+    post:
+      tags: [mcp]
+      summary: Probe MCP server
+      operationId: testMcpServer
+      parameters:
+        - { name: server_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }

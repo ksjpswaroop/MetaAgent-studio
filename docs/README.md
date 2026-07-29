@@ -36,6 +36,8 @@ uvicorn app.main:app --reload --port 8000
 
 | Document | Purpose |
 |----------|---------|
+| [ui/](ui/) | Desktop UI vision, flows, mockups, prototype handoff |
+| [demo-investor.md](demo-investor.md) | Tauri + live Ollama investor demo runbook |
 | [PROBLEM_AND_SOLUTION.md](PROBLEM_AND_SOLUTION.md) | Problem, value prop, 3-tier matrix |
 | [user-flows.md](user-flows.md) | End-to-end user journeys |
 | [database.md](database.md) | SQLite ER design and table dictionary |
@@ -60,5 +62,6 @@ uvicorn app.main:app --reload --port 8000
 11. [License & Pro](features/11-license-and-pro.md)
 12. [Settings](features/12-settings-and-telemetry-local.md)
 13. [Simulate / edge cases / prompts / package / improve](features/13-simulate-edge-prompts-package-improve.md)
+14. [Connectors & MCP](features/14-connectors-and-mcp.md)
 
 Also see [tdd-results.md](tdd-results.md) for cassette vs live test evidence.

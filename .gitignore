@@ -32,3 +32,6 @@ apps/api/.venv/
 *.db
 *.db-wal
 *.db-shm
+
+# Accidental cassette dumps outside apps/api/tests
+apps/tests/

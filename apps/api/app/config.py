@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     app_version: str = "0.1.0"
     db_path: Path = Path.home() / ".metaagent" / "studio.db"
-    http_timeout_seconds: float = 30.0
+    http_timeout_seconds: float = 120.0
     token_budget: int = 15000
     default_export_path: str = str(Path.home() / "MetaAgentExports")
     cors_origins: list[str] = ["*"]
@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     llm_mode: str = "cassette"
     llm_cassette_dir: Path = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "llm"
     package_sandbox_timeout_seconds: float = 60.0
+    # Investor demo: unlock Pro features without a license key
+    demo_unlock: bool = False
+    ollama_base_url: str = "http://127.0.0.1:11434"
 
 
 settings = Settings()

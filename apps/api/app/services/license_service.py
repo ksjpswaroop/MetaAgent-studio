@@ -7,6 +7,7 @@ import re
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.db.models import LicenseState
 from app.models.schemas import LicenseStatus
 from app.utils.time import utc_now
@@ -35,6 +36,15 @@ async def get_license_row(db: AsyncSession) -> LicenseState:
 
 
 def to_status(row: LicenseState) -> LicenseStatus:
+    if settings.demo_unlock:
+        return LicenseStatus(
+            tier="pro",
+            status="active",
+            license_key_last4="DEMO",
+            activated_at=utc_now(),
+            expires_at=None,
+            features=PRO_FEATURES + ["demo_unlock"],
+        )
     try:
         features = json.loads(row.features_json or "[]")
     except json.JSONDecodeError:
@@ -100,5 +110,7 @@ async def validate_license(db: AsyncSession) -> LicenseStatus:
 
 
 async def is_pro_active(db: AsyncSession) -> bool:
+    if settings.demo_unlock:
+        return True
     row = await db.scalar(select(LicenseState).where(LicenseState.id == 1))
     return bool(row and row.tier == "pro" and row.status == "active")

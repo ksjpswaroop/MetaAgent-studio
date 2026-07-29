@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaAgent Studio — Kits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="_shared.css" />
+    <style>
+      .grid {
+        display: grid;
+        gap: 1rem;
+        max-width: 56rem;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      }
+      .card h3 { margin: 0; font-family: var(--font-display); }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="nav">
+        <p class="brand">MetaAgent Studio</p>
+        <p class="eyebrow">agent studio</p>
+        <a href="home.html">Start</a>
+        <a href="studio.html">Build my agent</a>
+        <a href="check.html">Make sure it works</a>
+        <a class="active" href="kits.html">My saved kits</a>
+      </aside>
+      <main class="main">
+        <h2 class="display" style="margin-top: 0">My saved kits</h2>
+        <div class="grid">
+          <div class="glass card">
+            <h3>Help with support emails</h3>
+            <p class="muted" style="font-size: 0.9rem">Score 82</p>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-ghost" type="button">Open</button>
+              <button class="btn btn-cyan" type="button">Reuse</button>
+            </div>
+          </div>
+          <div class="glass card">
+            <h3>Read invoices safely</h3>
+            <p class="muted" style="font-size: 0.9rem">Score 74</p>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-ghost" type="button">Open</button>
+              <button class="btn btn-cyan" type="button">Reuse</button>
+            </div>
+          </div>
+        </div>
+        <p class="links">
+          <a href="home.html">← Home</a>
+          <a href="check.html">← Check</a>
+        </p>
+      </main>
+    </div>
+  </body>
+</html>

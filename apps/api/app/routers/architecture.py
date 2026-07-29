@@ -29,6 +29,20 @@ async def _load_blueprint(
     )
 
 
+def _tool_names(raw: object) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    names: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            names.append(item.strip())
+        elif isinstance(item, dict):
+            name = item.get("name") or item.get("tool") or item.get("id")
+            if isinstance(name, str) and name.strip():
+                names.append(name.strip())
+    return names
+
+
 def _out(bp: ArchitectureBlueprint) -> ArchitectureBlueprintOut:
     agents = sorted(bp.agents, key=lambda a: a.sort_order)
     return ArchitectureBlueprintOut(
@@ -43,7 +57,7 @@ def _out(bp: ArchitectureBlueprint) -> ArchitectureBlueprintOut:
                 name=a.name,
                 role=a.role,
                 system_prompt=a.system_prompt,
-                tools=json.loads(a.tools_json or "[]"),
+                tools=_tool_names(json.loads(a.tools_json or "[]")),
                 model_recommendation=a.model_recommendation,
             )
             for a in agents

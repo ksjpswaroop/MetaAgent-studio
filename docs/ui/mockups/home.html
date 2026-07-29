@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaAgent Studio — Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="_shared.css" />
+    <style>
+      .hero {
+        max-width: 40rem;
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .brand-hero {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 6vw, 3.75rem);
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(90deg, var(--li-blue-dark), var(--li-blue), var(--li-blue-soft));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        margin-top: 2rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--li-border);
+        background: #fff;
+        color: var(--li-ink);
+        padding: 1rem;
+        font: inherit;
+        resize: vertical;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="nav">
+        <p class="brand">MetaAgent Studio</p>
+        <p class="eyebrow">agent studio</p>
+        <a class="active" href="home.html">Start</a>
+        <a href="studio.html">Build my agent</a>
+        <a href="check.html">Make sure it works</a>
+        <a href="kits.html">My saved kits</a>
+      </aside>
+      <main class="main">
+        <section class="hero">
+          <p class="brand-hero">MetaAgent Studio</p>
+          <h1 class="display" style="font-size: 1.75rem; margin: 1rem 0 0.5rem">
+            Turn an idea into a working helper
+          </h1>
+          <p class="muted">Describe what you want. We’ll guide the rest.</p>
+          <textarea placeholder="Example: Sort support emails and draft kind replies…"></textarea>
+          <div style="margin-top: 0.75rem">
+            <span class="chip">Help with support emails</span>
+            <span class="chip">Read invoices safely</span>
+            <span class="chip">Summarize research notes</span>
+          </div>
+          <div style="margin-top: 1.25rem">
+            <button class="btn btn-cyan" type="button">Start building</button>
+          </div>
+        </section>
+        <p class="links">
+          <a href="studio.html">Studio →</a>
+          <a href="check.html">Check →</a>
+          <a href="kits.html">Kits →</a>
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
