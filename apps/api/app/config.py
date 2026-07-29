@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     token_budget: int = 15000
     default_export_path: str = str(Path.home() / "MetaAgentExports")
     cors_origins: list[str] = ["*"]
+    # cassette = offline recorded responses; live = real provider HTTP calls
+    llm_mode: str = "cassette"
+    llm_cassette_dir: Path = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "llm"
+    package_sandbox_timeout_seconds: float = 60.0
 
 
 settings = Settings()

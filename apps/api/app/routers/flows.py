@@ -7,9 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.models import ExecutionScenario, FlowRevisionLog, ScenarioStep, ScopeEnvelopeRow
+from app.db.models import ExecutionScenario, FlowRevisionLog, ScenarioStep
 from app.db.session import get_db
 from app.models.schemas import ExecutionScenarioOut, FlowModifyRequest, ScenarioStepOut
+from app.services import flow_engine
 from app.services.session_helpers import (
     append_event,
     get_session_or_404,
@@ -17,7 +18,6 @@ from app.services.session_helpers import (
     require_stage,
     save_state,
 )
-from app.stubs.sample_data import stub_scenarios
 from app.utils.ids import new_id
 from app.utils.time import utc_now
 
@@ -68,60 +68,20 @@ async def generate_flows(
     session = await get_session_or_404(db, session_id)
     require_stage(
         session,
-        {"scope_ready", "flows", "flow_approved", "allocated", "architected", "gated", "scaffolded"},
+        {
+            "scope_ready",
+            "flows",
+            "flow_approved",
+            "allocated",
+            "architected",
+            "gated",
+            "scaffolded",
+        },
         "Scope must be finalized before generating flows",
     )
-    scope = await db.scalar(
-        select(ScopeEnvelopeRow).where(ScopeEnvelopeRow.session_id == session_id)
-    )
-    project_name = scope.project_name if scope else "Project"
-
-    # Replace existing stub scenarios
-    existing = await _load_scenarios(db, session_id)
-    for s in existing:
-        await db.delete(s)
-    await db.flush()
-
-    created: list[ExecutionScenario] = []
-    for data in stub_scenarios(project_name):
-        scenario = ExecutionScenario(
-            id=new_id("scen"),
-            session_id=session_id,
-            kind=data["kind"],
-            title=data["title"],
-            ascii_flow=data["ascii_flow"],
-            mermaid_flow=data["mermaid_flow"],
-            sort_order=data["sort_order"],
-            is_approved=False,
-            created_at=utc_now(),
-        )
-        db.add(scenario)
-        await db.flush()
-        for step in data["steps"]:
-            db.add(
-                ScenarioStep(
-                    id=new_id("step"),
-                    scenario_id=scenario.id,
-                    step_index=step["step_index"],
-                    name=step["name"],
-                    input_data_json=json.dumps(step.get("input_data", {})),
-                    processing_goal=step.get("processing_goal", ""),
-                    expected_output=step.get("expected_output", ""),
-                    notes=step.get("notes", ""),
-                )
-            )
-        created.append(scenario)
-
-    session.stage = "flows"
-    state = load_state(session)
-    state["sample_flows"] = [
-        {"kind": c.kind, "title": c.title} for c in created
-    ]
-    save_state(session, state)
-    await append_event(db, session_id, "flows.generated")
+    scenarios = await flow_engine.generate_flows(db, session)
     await db.commit()
-    scenarios = await _load_scenarios(db, session_id)
-    return [_scenario_out(s) for s in scenarios]
+    return [_scenario_out(s) for s in await _load_scenarios(db, session_id)]
 
 
 @router.get("/{session_id}", response_model=list[ExecutionScenarioOut])
@@ -129,8 +89,7 @@ async def get_flows(
     session_id: str, db: AsyncSession = Depends(get_db)
 ) -> list[ExecutionScenarioOut]:
     await get_session_or_404(db, session_id)
-    scenarios = await _load_scenarios(db, session_id)
-    return [_scenario_out(s) for s in scenarios]
+    return [_scenario_out(s) for s in await _load_scenarios(db, session_id)]
 
 
 @router.post("/{session_id}/modify", response_model=list[ExecutionScenarioOut])

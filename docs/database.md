@@ -125,11 +125,25 @@ Append-only event log for SSE/CLI progress (`event_type`, `payload_json`).
 - `provider_health_checks` — latency and ok flag
 - `template_cache` — Jinja/AST template cache
 
+## Simulation, package, improve (migration 002)
+
+| Table | Role |
+|-------|------|
+| `edge_cases` | Generated stress cases per agent/step |
+| `simulation_runs` | Scenario/edge simulation jobs + scores |
+| `simulation_step_traces` | Per-step I/O and pass/fail |
+| `coding_gap_prompts` | Cursor/Claude/Codex prompts from failures |
+| `packages` | Local tree/zip/checksum/verify status |
+| `package_files` | Per-file hashes inside a package |
+| `improvement_iterations` | Hill-climb score history |
+| `agent_packs` | Reusable published local packs |
+
 ## Migrations
 
 | File | Description |
 |------|-------------|
-| `001_init.sql` | Full initial schema (mirrors `schema.sql`) |
+| `001_init.sql` | Initial schema |
+| `002_simulation_package_improve.sql` | Simulation, package, improve, packs |
 
 Applied on API startup via `init_db()`.
 

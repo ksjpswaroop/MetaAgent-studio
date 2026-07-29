@@ -1,0 +1,28 @@
+paths:
+  /api/v1/simulate/{session_id}/run:
+    post:
+      tags: [simulate]
+      summary: Run agent simulation
+      operationId: runSimulation
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Simulation run with traces }
+  /api/v1/simulate/{session_id}/runs:
+    get:
+      tags: [simulate]
+      summary: List simulation runs
+      operationId: listSimulationRuns
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Runs }
+  /api/v1/simulate/runs/{run_id}:
+    get:
+      tags: [simulate]
+      summary: Get simulation run
+      operationId: getSimulationRun
+      parameters:
+        - { name: run_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Run with traces }

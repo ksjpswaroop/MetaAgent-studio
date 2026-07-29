@@ -14,13 +14,8 @@ from app.models.schemas import (
     ScopeEnvelope,
     ScopeFinalizeRequest,
 )
-from app.services.session_helpers import (
-    append_event,
-    get_session_or_404,
-    load_state,
-    save_state,
-)
-from app.stubs.sample_data import DISCOVERY_QUESTIONS
+from app.services import discovery_engine
+from app.services.session_helpers import append_event, get_session_or_404
 from app.utils.ids import new_id
 from app.utils.time import utc_now
 
@@ -42,31 +37,7 @@ async def start_discovery(
     session_id: str, db: AsyncSession = Depends(get_db)
 ) -> list[DiscoveryMessageOut]:
     session = await get_session_or_404(db, session_id)
-    session.stage = "discovery"
-    session.updated_at = utc_now()
-    created: list[DiscoveryMessage] = []
-    intro = DiscoveryMessage(
-        id=new_id("dmsg"),
-        session_id=session_id,
-        role="assistant",
-        content="Let's clarify scope with a few questions.",
-        question_key=None,
-        created_at=utc_now(),
-    )
-    db.add(intro)
-    created.append(intro)
-    for q in DISCOVERY_QUESTIONS:
-        msg = DiscoveryMessage(
-            id=new_id("dmsg"),
-            session_id=session_id,
-            role="assistant",
-            content=q["content"],
-            question_key=q["question_key"],
-            created_at=utc_now(),
-        )
-        db.add(msg)
-        created.append(msg)
-    await append_event(db, session_id, "discovery.started")
+    created = await discovery_engine.start_discovery(db, session)
     await db.commit()
     return [_msg_out(m) for m in created]
 
@@ -88,10 +59,7 @@ async def answer_discovery(
     )
     db.add(msg)
     await append_event(
-        db,
-        session_id,
-        "discovery.answered",
-        {"question_key": body.question_key},
+        db, session_id, "discovery.answered", {"question_key": body.question_key}
     )
     await db.commit()
     await db.refresh(msg)
@@ -116,47 +84,16 @@ async def list_messages(
 @router.post("/{session_id}/finalize", response_model=ScopeEnvelope)
 async def finalize_scope(
     session_id: str,
-    body: ScopeFinalizeRequest,
+    body: ScopeFinalizeRequest | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> ScopeEnvelope:
     session = await get_session_or_404(db, session_id)
-    scope = body.scope
-    if scope.trigger_type not in {"webhook", "cron", "manual"}:
+    override = body.scope.model_dump() if body and body.scope else None
+    if override and override.get("trigger_type") not in {"webhook", "cron", "manual"}:
         raise HTTPException(status_code=422, detail="Invalid trigger_type")
-    existing = await db.scalar(
-        select(ScopeEnvelopeRow).where(ScopeEnvelopeRow.session_id == session_id)
-    )
-    raw = scope.model_dump()
-    if existing:
-        existing.project_name = scope.project_name
-        existing.primary_goal = scope.primary_goal
-        existing.trigger_type = scope.trigger_type
-        existing.external_tools_json = json.dumps(scope.external_tools)
-        existing.human_in_loop = scope.human_in_loop
-        existing.fallback_strategy = scope.fallback_strategy
-        existing.raw_json = json.dumps(raw)
-    else:
-        db.add(
-            ScopeEnvelopeRow(
-                id=new_id("scope"),
-                session_id=session_id,
-                project_name=scope.project_name,
-                primary_goal=scope.primary_goal,
-                trigger_type=scope.trigger_type,
-                external_tools_json=json.dumps(scope.external_tools),
-                human_in_loop=scope.human_in_loop,
-                fallback_strategy=scope.fallback_strategy,
-                raw_json=json.dumps(raw),
-                created_at=utc_now(),
-            )
-        )
-    state = load_state(session)
-    state["scope_envelope"] = raw
-    save_state(session, state)
-    session.stage = "scope_ready"
-    await append_event(db, session_id, "discovery.finalized", raw)
+    scope = await discovery_engine.finalize_from_transcript(db, session, override)
     await db.commit()
-    return scope
+    return ScopeEnvelope(**scope)
 
 
 @router.get("/{session_id}/scope", response_model=ScopeEnvelope)

@@ -281,3 +281,132 @@ class TemplateCache(Base):
     content_hash: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     updated_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class EdgeCase(Base):
+    __tablename__ = "edge_cases"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("studio_sessions.id", ondelete="CASCADE"))
+    agent_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    step_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    category: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    input_fixture_json: Mapped[str] = mapped_column(Text, default="{}")
+    expected_behavior: Mapped[str] = mapped_column(Text, default="")
+    attached_scenario_id: Mapped[str | None] = mapped_column(
+        ForeignKey("execution_scenarios.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class SimulationRun(Base):
+    __tablename__ = "simulation_runs"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("studio_sessions.id", ondelete="CASCADE"))
+    status: Mapped[str] = mapped_column(String, default="queued")
+    scenario_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    edge_case_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    score_json: Mapped[str] = mapped_column(Text, default="{}")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    started_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    finished_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class SimulationStepTrace(Base):
+    __tablename__ = "simulation_step_traces"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("simulation_runs.id", ondelete="CASCADE"))
+    step_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    step_name: Mapped[str] = mapped_column(String, nullable=False)
+    agent_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    input_json: Mapped[str] = mapped_column(Text, default="{}")
+    output_json: Mapped[str] = mapped_column(Text, default="{}")
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class CodingGapPrompt(Base):
+    __tablename__ = "coding_gap_prompts"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("studio_sessions.id", ondelete="CASCADE"))
+    simulation_run_id: Mapped[str | None] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    tool_target: Mapped[str] = mapped_column(String, default="generic")
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    gap_description: Mapped[str] = mapped_column(Text, default="")
+    files_json: Mapped[str] = mapped_column(Text, default="[]")
+    acceptance_criteria: Mapped[str] = mapped_column(Text, default="")
+    prompt_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class Package(Base):
+    __tablename__ = "packages"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("studio_sessions.id", ondelete="CASCADE"))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    scaffold_job_id: Mapped[str | None] = mapped_column(
+        ForeignKey("scaffold_jobs.id", ondelete="SET NULL"), nullable=True
+    )
+    output_dir: Mapped[str] = mapped_column(String, nullable=False)
+    zip_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    manifest_json: Mapped[str] = mapped_column(Text, default="{}")
+    checksum_sha256: Mapped[str | None] = mapped_column(String, nullable=True)
+    pytest_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    verify_log: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="built")
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class PackageFile(Base):
+    __tablename__ = "package_files"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    package_id: Mapped[str] = mapped_column(ForeignKey("packages.id", ondelete="CASCADE"))
+    file_path: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False)
+    byte_size: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class ImprovementIteration(Base):
+    __tablename__ = "improvement_iterations"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("studio_sessions.id", ondelete="CASCADE"))
+    iteration_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    simulation_run_id: Mapped[str | None] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    package_id: Mapped[str | None] = mapped_column(
+        ForeignKey("packages.id", ondelete="SET NULL"), nullable=True
+    )
+    score_before: Mapped[float | None] = mapped_column(Float, nullable=True)
+    score_after: Mapped[float | None] = mapped_column(Float, nullable=True)
+    plateau: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    details_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class AgentPack(Base):
+    __tablename__ = "agent_packs"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    source_session_id: Mapped[str | None] = mapped_column(
+        ForeignKey("studio_sessions.id", ondelete="SET NULL"), nullable=True
+    )
+    source_project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
+    )
+    package_id: Mapped[str | None] = mapped_column(
+        ForeignKey("packages.id", ondelete="SET NULL"), nullable=True
+    )
+    blueprint_json: Mapped[str] = mapped_column(Text, default="{}")
+    best_score: Mapped[float] = mapped_column(Float, default=0.0)
+    scores_json: Mapped[str] = mapped_column(Text, default="{}")
+    metadata_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+    updated_at: Mapped[str] = mapped_column(String, nullable=False)

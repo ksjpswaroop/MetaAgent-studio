@@ -1,29 +1,27 @@
 # MetaAgent Studio API
 
-Local-first FastAPI core for the MetaAgent Studio desktop/CLI app.
+Local-first FastAPI core for MetaAgent Studio.
 
-- Single-user (no auth)
-- SQLite persistence (`METAAGENT_DB_PATH`, default `~/.metaagent/studio.db`)
-- License key unlocks Pro stub routers
-- LLM pipeline stages return canned stubs but persist results
+- Single-user (no auth); license key unlocks Pro stubs
+- SQLite persistence (`METAAGENT_DB_PATH`)
+- **LLM-backed** discovery / flows / allocation / architecture (`METAAGENT_LLM_MODE=cassette|live`)
+- Simulation, edge cases, coding-gap prompts, local packaging, hill-climb improve + agent packs
 
 ## Setup
 
 ```bash
 cd apps/api
-python -m venv .venv
-source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 export METAAGENT_DB_PATH=/tmp/metaagent-studio-dev.db
+export METAAGENT_LLM_MODE=cassette   # or live with Ollama running
 uvicorn app.main:app --reload --port 8000
 ```
 
-- Swagger UI: http://127.0.0.1:8000/docs
+- Swagger: http://127.0.0.1:8000/docs
 - Health: http://127.0.0.1:8000/health
 
 ## License stub
-
-Activate Pro with a key matching `MAS-PRO-XXXX-XXXX-XXXX`:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/license/activate \
@@ -34,11 +32,12 @@ curl -X POST http://127.0.0.1:8000/api/v1/license/activate \
 ## Tests
 
 ```bash
-cd apps/api
-export METAAGENT_DB_PATH=/tmp/metaagent-studio-test.db
+export METAAGENT_LLM_MODE=cassette
 pytest -q
 ```
 
-## Docs
+See [`docs/tdd-results.md`](../../docs/tdd-results.md).
 
-See [`docs/`](../../docs/README.md) for features, user flows, database design, and OpenAPI YAML.
+## Loop
+
+idea → LLM design → package (tree/zip/checksums/pytest) → simulate → edge cases → coding-gap prompts → improve → publish pack → fork/reuse
