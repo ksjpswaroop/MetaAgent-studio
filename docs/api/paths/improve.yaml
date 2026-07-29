@@ -1,0 +1,44 @@
+paths:
+  /api/v1/improve/{session_id}/iterate:
+    post:
+      tags: [improve]
+      summary: One hill-climb improvement iteration
+      operationId: improveIterate
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Iteration result }
+  /api/v1/improve/{session_id}/history:
+    get:
+      tags: [improve]
+      summary: Improvement score history
+      operationId: improveHistory
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Iterations }
+  /api/v1/improve/{session_id}/publish-local:
+    post:
+      tags: [improve]
+      summary: Publish reusable local agent pack
+      operationId: publishPack
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Agent pack }
+  /api/v1/packs:
+    get:
+      tags: [improve]
+      summary: List agent packs
+      operationId: listPacks
+      responses:
+        '200': { description: Packs }
+  /api/v1/packs/{pack_id}/fork:
+    post:
+      tags: [improve]
+      summary: Fork pack into new project session
+      operationId: forkPack
+      parameters:
+        - { name: pack_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: New session }

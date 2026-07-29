@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Artifact, ScaffoldJob
+from app.db.models import Artifact, Package, ScaffoldJob
 from app.db.session import get_db
 from app.models.schemas import ArtifactOut
 
@@ -42,30 +42,37 @@ async def list_artifacts(
 
 
 @router.get("/jobs/{job_id}/download")
-async def download_job(job_id: str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+async def download_job(job_id: str, db: AsyncSession = Depends(get_db)):
     job = await db.get(ScaffoldJob, job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    rows = (
-        await db.scalars(
-            select(Artifact).where(Artifact.scaffold_job_id == job_id)
+    pkg = await db.scalar(
+        select(Package).where(Package.scaffold_job_id == job_id)
+    )
+    if pkg and pkg.zip_path and Path(pkg.zip_path).exists():
+        return FileResponse(
+            pkg.zip_path,
+            media_type="application/zip",
+            filename=Path(pkg.zip_path).name,
         )
+    rows = (
+        await db.scalars(select(Artifact).where(Artifact.scaffold_job_id == job_id))
     ).all()
-    manifest = {
-        "job_id": job_id,
-        "status": job.status,
-        "files": [
-            {
-                "path": a.file_path,
-                "content_hash": a.content_hash,
-                "byte_size": a.byte_size,
-                "content": a.content_text,
-            }
-            for a in rows
-        ],
-    }
-    # Stub: return JSON manifest instead of real zip when no disk tree
-    return JSONResponse(content=manifest)
+    return JSONResponse(
+        content={
+            "job_id": job_id,
+            "status": job.status,
+            "files": [
+                {
+                    "path": a.file_path,
+                    "content_hash": a.content_hash,
+                    "byte_size": a.byte_size,
+                    "content": a.content_text,
+                }
+                for a in rows
+            ],
+        }
+    )
 
 
 @router.get("/{artifact_id}", response_model=ArtifactOut)

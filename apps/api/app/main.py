@@ -13,17 +13,22 @@ from app.routers import (
     architecture,
     artifacts,
     discovery,
+    edge_cases,
     events,
     flows,
     gates,
     health,
+    improve,
     license,
+    package,
     pro,
     projects,
+    prompts,
     providers,
     scaffold,
     sessions,
     settings as settings_router,
+    simulate,
 )
 
 
@@ -36,7 +41,10 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="MetaAgent Studio Local API",
     version=__version__,
-    description="Local-first core API for MetaAgent Studio (single-user, license-gated Pro stubs).",
+    description=(
+        "Local-first core API for MetaAgent Studio. "
+        "LLM-backed design stages, simulation, packaging, and hill-climb improvement."
+    ),
     lifespan=lifespan,
 )
 
@@ -63,3 +71,8 @@ app.include_router(providers.router)
 app.include_router(settings_router.router)
 app.include_router(events.router)
 app.include_router(pro.router)
+app.include_router(edge_cases.router)
+app.include_router(simulate.router)
+app.include_router(prompts.router)
+app.include_router(package.router)
+app.include_router(improve.router)

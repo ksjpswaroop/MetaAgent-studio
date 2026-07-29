@@ -25,6 +25,11 @@ tags:
   - name: providers
   - name: settings
   - name: events
+  - name: edge-cases
+  - name: simulate
+  - name: prompts
+  - name: package
+  - name: improve
   - name: pro
     description: Future Pro routers (require active license)
 paths:
@@ -126,6 +131,38 @@ paths:
     $ref: ./paths/pro.yaml#/paths/~1api~1v1~1deploy
   /api/v1/audits:
     $ref: ./paths/pro.yaml#/paths/~1api~1v1~1audits
+  /api/v1/edge-cases/{session_id}/generate:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}~1generate
+  /api/v1/edge-cases/{session_id}:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}
+  /api/v1/edge-cases/{session_id}/{case_id}/attach-to-flows:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}~1{case_id}~1attach-to-flows
+  /api/v1/simulate/{session_id}/run:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1{session_id}~1run
+  /api/v1/simulate/{session_id}/runs:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1{session_id}~1runs
+  /api/v1/simulate/runs/{run_id}:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1runs~1{run_id}
+  /api/v1/prompts/{session_id}/generate:
+    $ref: ./paths/prompts.yaml#/paths/~1api~1v1~1prompts~1{session_id}~1generate
+  /api/v1/prompts/{session_id}:
+    $ref: ./paths/prompts.yaml#/paths/~1api~1v1~1prompts~1{session_id}
+  /api/v1/package/{session_id}/build:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1build
+  /api/v1/package/{session_id}/verify:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1verify
+  /api/v1/package/{session_id}/packages:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1packages
+  /api/v1/improve/{session_id}/iterate:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1iterate
+  /api/v1/improve/{session_id}/history:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1history
+  /api/v1/improve/{session_id}/publish-local:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1publish-local
+  /api/v1/packs:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs
+  /api/v1/packs/{pack_id}/fork:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs~1{pack_id}~1fork
 components:
   schemas:
     $ref: ./components/schemas.yaml#/components/schemas

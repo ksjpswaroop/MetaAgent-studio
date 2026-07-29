@@ -1,0 +1,10 @@
+{
+  "project_name": "Generated Project",
+  "primary_goal": "{\"prompt\": \"y\", \"transcript\": [{\"role\": \"assistant\", \"question_key\": null, \"content\": \"Let's clarify scope with a few questions.\"}, {\"role\": \"assistant\", \"question_key\": \"trigger_type\", \"content\": \"Ho",
+  "trigger_type": "webhook",
+  "external_tools": [
+    "http_api"
+  ],
+  "human_in_loop": true,
+  "fallback_strategy": "queue and retry"
+}

@@ -87,14 +87,20 @@ async def update_provider(
 async def test_provider(
     provider_id: str, db: AsyncSession = Depends(get_db)
 ) -> ProviderHealthOut:
+    from app.config import settings
+    from app.services.llm.adapters import ping_provider
+
     prov = await db.get(LlmProvider, provider_id)
     if prov is None:
         raise HTTPException(status_code=404, detail="Provider not found")
     started = time.perf_counter()
-    # Stub: ollama considered "reachable" only if enabled; no real network call
-    ok = bool(prov.enabled)
+    if settings.llm_mode == "cassette":
+        ok, message = bool(prov.enabled), "cassette mode: skipped network ping"
+    else:
+        ok, message = await ping_provider(prov.name, prov.base_url)
+        if not prov.enabled:
+            ok, message = False, "provider disabled"
     latency = int((time.perf_counter() - started) * 1000)
-    message = "stub ok" if ok else "provider disabled"
     db.add(
         ProviderHealthCheck(
             id=new_id("phc"),

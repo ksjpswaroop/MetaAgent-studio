@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Support Triage",
+    "prompt": "Build a multi-agent system that triages support emails, retrieves KB snippets, and drafts replies with human approval."
+  },
+  {
+    "name": "Invoice Ingest",
+    "prompt": "Ingest invoice PDFs via webhook, extract line items, score fraud risk, and post to accounting API."
+  },
+  {
+    "name": "Research Summarizer",
+    "prompt": "Given a research query, retrieve papers, cluster findings, and synthesize a brief with citations."
+  }
+]

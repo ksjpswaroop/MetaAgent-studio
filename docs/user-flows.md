@@ -57,3 +57,18 @@ Free tier includes full local design and scaffold. Pro stubs (`/teams`, `/deploy
 ## Flow F — Provider fallback
 
 Settings prefer Ollama → health check fails → API falls back to next enabled provider by `priority` → event logged in `session_events` / `provider_health_checks`.
+
+## Flow G — Simulate, improve, reuse (hill climb)
+
+```mermaid
+flowchart TD
+  arch[Architecture ready] --> edges[Generate edge cases]
+  edges --> sim[Simulate scenarios]
+  sim --> prompts[Coding-gap prompts]
+  prompts --> pkg[Package locally]
+  pkg --> iterate[Improve iterate]
+  iterate --> pack[Publish agent pack]
+  pack --> fork[Fork pack into new project]
+```
+
+**API:** edge-cases → simulate → prompts → package/build → improve/iterate → publish-local → packs/fork.

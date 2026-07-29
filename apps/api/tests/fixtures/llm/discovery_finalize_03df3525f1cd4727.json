@@ -1,0 +1,10 @@
+{
+  "project_name": "Generated Project",
+  "primary_goal": "{\"prompt\": \"Build a multi-agent system that triages support emails, retrieves KB snippets, and drafts replies with human approval.\", \"transcript\": [{\"role\": \"assistant\", \"question_key\": null, \"content",
+  "trigger_type": "webhook",
+  "external_tools": [
+    "http_api"
+  ],
+  "human_in_loop": true,
+  "fallback_strategy": "queue and retry"
+}

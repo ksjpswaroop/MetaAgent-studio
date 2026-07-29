@@ -59,3 +59,6 @@ uvicorn app.main:app --reload --port 8000
 10. [CLI & desktop](features/10-cli-and-desktop.md)
 11. [License & Pro](features/11-license-and-pro.md)
 12. [Settings](features/12-settings-and-telemetry-local.md)
+13. [Simulate / edge cases / prompts / package / improve](features/13-simulate-edge-prompts-package-improve.md)
+
+Also see [tdd-results.md](tdd-results.md) for cassette vs live test evidence.

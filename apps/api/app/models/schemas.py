@@ -130,7 +130,7 @@ class ScopeEnvelope(BaseModel):
 
 
 class ScopeFinalizeRequest(BaseModel):
-    scope: ScopeEnvelope
+    scope: ScopeEnvelope | None = None
 
 
 class ScenarioStepOut(BaseModel):
@@ -289,3 +289,157 @@ class ProviderOrderRequest(BaseModel):
 class ProStubResponse(BaseModel):
     message: str
     maturity: str = "future"
+
+
+class EdgeCaseOut(BaseModel):
+    id: str
+    session_id: str
+    agent_name: str | None = None
+    step_name: str | None = None
+    category: str
+    title: str
+    description: str = ""
+    input_fixture: dict[str, Any] = Field(default_factory=dict)
+    expected_behavior: str = ""
+    attached_scenario_id: str | None = None
+    created_at: str
+
+
+class EdgeCaseGenerateRequest(BaseModel):
+    count: int = 5
+    categories: list[str] = Field(
+        default_factory=lambda: [
+            "timeout",
+            "partial_data",
+            "schema_drift",
+            "tool_failure",
+        ]
+    )
+
+
+class SimulationRunRequest(BaseModel):
+    scenario_ids: list[str] = Field(default_factory=list)
+    edge_case_ids: list[str] = Field(default_factory=list)
+    include_all_scenarios: bool = True
+
+
+class SimulationTraceOut(BaseModel):
+    id: str
+    step_index: int
+    step_name: str
+    agent_name: str | None = None
+    input: dict[str, Any] = Field(default_factory=dict)
+    output: dict[str, Any] = Field(default_factory=dict)
+    passed: bool
+    latency_ms: int | None = None
+    error: str | None = None
+
+
+class SimulationScore(BaseModel):
+    overall: float = 0.0
+    correctness: float = 0.0
+    gate_pass_rate: float = 0.0
+    latency_budget: float = 0.0
+    tier_efficiency: float = 0.0
+
+
+class SimulationRunOut(BaseModel):
+    id: str
+    session_id: str
+    status: str
+    scenario_ids: list[str] = Field(default_factory=list)
+    edge_case_ids: list[str] = Field(default_factory=list)
+    score: SimulationScore = Field(default_factory=SimulationScore)
+    summary: str = ""
+    traces: list[SimulationTraceOut] = Field(default_factory=list)
+    started_at: str | None = None
+    finished_at: str | None = None
+    created_at: str
+
+
+class PromptGenerateRequest(BaseModel):
+    simulation_run_id: str | None = None
+    tool_target: str = "cursor"
+
+
+class CodingGapPromptOut(BaseModel):
+    id: str
+    session_id: str
+    simulation_run_id: str | None = None
+    tool_target: str
+    title: str
+    gap_description: str = ""
+    files: list[str] = Field(default_factory=list)
+    acceptance_criteria: str = ""
+    prompt_text: str
+    created_at: str
+
+
+class PackageBuildRequest(BaseModel):
+    output_dir: str | None = None
+    run_verify: bool = True
+
+
+class PackageFileOut(BaseModel):
+    file_path: str
+    content_hash: str
+    byte_size: int
+
+
+class PackageOut(BaseModel):
+    id: str
+    session_id: str
+    project_id: str
+    scaffold_job_id: str | None = None
+    output_dir: str
+    zip_path: str | None = None
+    checksum_sha256: str | None = None
+    pytest_passed: bool = False
+    verify_log: str | None = None
+    status: str
+    files: list[PackageFileOut] = Field(default_factory=list)
+    created_at: str
+
+
+class ImproveIterateRequest(BaseModel):
+    auto_attach_edge_cases: bool = True
+    generate_prompts: bool = True
+    tool_target: str = "cursor"
+
+
+class ImprovementIterationOut(BaseModel):
+    id: str
+    session_id: str
+    iteration_index: int
+    simulation_run_id: str | None = None
+    package_id: str | None = None
+    score_before: float | None = None
+    score_after: float | None = None
+    plateau: bool = False
+    notes: str = ""
+    details: dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class PublishPackRequest(BaseModel):
+    name: str
+    package_id: str | None = None
+
+
+class AgentPackOut(BaseModel):
+    id: str
+    name: str
+    source_session_id: str | None = None
+    source_project_id: str | None = None
+    package_id: str | None = None
+    blueprint: dict[str, Any] = Field(default_factory=dict)
+    best_score: float = 0.0
+    scores: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+    updated_at: str
+
+
+class ForkPackRequest(BaseModel):
+    project_name: str | None = None
+    raw_user_prompt: str | None = None

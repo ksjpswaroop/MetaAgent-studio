@@ -7,14 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import StepAllocation
 from app.db.session import get_db
 from app.models.schemas import AllocationOverride, StepAllocationOut, TierType
-from app.services.session_helpers import (
-    append_event,
-    get_session_or_404,
-    load_state,
-    save_state,
-)
-from app.stubs.sample_data import stub_allocations
-from app.utils.ids import new_id
+from app.services import allocation_engine
+from app.services.session_helpers import append_event, get_session_or_404
 from app.utils.time import utc_now
 
 router = APIRouter(prefix="/api/v1/allocation", tags=["allocation"])
@@ -32,34 +26,6 @@ def _out(row: StepAllocation) -> StepAllocationOut:
     )
 
 
-async def _replace_allocations(db: AsyncSession, session_id: str) -> list[StepAllocation]:
-    existing = (
-        await db.scalars(
-            select(StepAllocation).where(StepAllocation.session_id == session_id)
-        )
-    ).all()
-    for row in existing:
-        await db.delete(row)
-    await db.flush()
-    created: list[StepAllocation] = []
-    for item in stub_allocations():
-        row = StepAllocation(
-            id=new_id("alloc"),
-            session_id=session_id,
-            step_id=item["step_id"],
-            step_name=item["step_name"],
-            description=item["description"],
-            allocated_tier=item["allocated_tier"].value,
-            rationale=item["rationale"],
-            suggested_tech=item["suggested_tech"],
-            user_override=False,
-            updated_at=utc_now(),
-        )
-        db.add(row)
-        created.append(row)
-    return created
-
-
 @router.post("/{session_id}/run", response_model=list[StepAllocationOut])
 async def run_allocation(
     session_id: str, db: AsyncSession = Depends(get_db)
@@ -67,30 +33,16 @@ async def run_allocation(
     session = await get_session_or_404(db, session_id)
     if not session.flow_approved:
         raise HTTPException(status_code=409, detail="Flow must be approved first")
-    rows = await _replace_allocations(db, session_id)
-    session.stage = "allocated"
-    state = load_state(session)
-    state["allocations"] = [
-        {
-            "step_id": r.step_id,
-            "step_name": r.step_name,
-            "allocated_tier": r.allocated_tier,
-            "rationale": r.rationale,
-            "suggested_tech": r.suggested_tech,
-        }
-        for r in rows
-    ]
-    save_state(session, state)
-    await append_event(db, session_id, "allocation.completed")
+    await allocation_engine.run_allocation(db, session)
     await db.commit()
-    refreshed = (
+    rows = (
         await db.scalars(
             select(StepAllocation)
             .where(StepAllocation.session_id == session_id)
             .order_by(StepAllocation.step_id.asc())
         )
     ).all()
-    return [_out(r) for r in refreshed]
+    return [_out(r) for r in rows]
 
 
 @router.get("/{session_id}", response_model=list[StepAllocationOut])
@@ -128,9 +80,7 @@ async def override_step(
     row.rationale = body.rationale
     row.user_override = True
     row.updated_at = utc_now()
-    await append_event(
-        db, session_id, "allocation.overridden", {"step_id": step_id}
-    )
+    await append_event(db, session_id, "allocation.overridden", {"step_id": step_id})
     await db.commit()
     await db.refresh(row)
     return _out(row)

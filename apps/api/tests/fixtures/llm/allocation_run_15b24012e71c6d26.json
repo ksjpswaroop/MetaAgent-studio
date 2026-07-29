@@ -1,0 +1,36 @@
+{
+  "allocations": [
+    {
+      "step_id": 1,
+      "step_name": "Validate Payload & Auth",
+      "description": "Deterministic checks",
+      "allocated_tier": "TIER_1_CODE",
+      "rationale": "Strict validation",
+      "suggested_tech": "Pydantic + HMAC"
+    },
+    {
+      "step_id": 2,
+      "step_name": "Search Knowledge Base",
+      "description": "Retrieval",
+      "allocated_tier": "TIER_2_CLASSICAL_ML",
+      "rationale": "Embeddings search",
+      "suggested_tech": "Sentence-Transformers"
+    },
+    {
+      "step_id": 3,
+      "step_name": "Reason & Draft Reply",
+      "description": "Synthesis",
+      "allocated_tier": "TIER_3_LLM_AGENT",
+      "rationale": "Open-ended generation",
+      "suggested_tech": "LangGraph + Ollama"
+    },
+    {
+      "step_id": 4,
+      "step_name": "Post-execution Gates & Emit",
+      "description": "Gates",
+      "allocated_tier": "TIER_1_CODE",
+      "rationale": "Safety must be deterministic",
+      "suggested_tech": "Regex + budget"
+    }
+  ]
+}

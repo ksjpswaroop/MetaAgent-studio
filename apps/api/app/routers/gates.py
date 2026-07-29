@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -16,11 +17,17 @@ from app.utils.time import utc_now
 router = APIRouter(prefix="/api/v1/gates", tags=["gates"])
 
 DEFAULT_GATES = [
-    ("schema", "pre", {"strict": True}),
-    ("pii", "post", {"redact": ["email", "phone"]}),
+    ("schema", "pre", {"required_keys": ["input_payload"]}),
+    ("pii", "post", {"patterns": [r"[\w.+-]+@[\w-]+\.[\w.-]+"]}),
     ("cost_budget", "pre", {"max_tokens": 15000}),
     ("rate_limit", "pre", {"rpm": 60}),
 ]
+
+SAMPLE_PAYLOAD = {
+    "input_payload": {"id": "1"},
+    "draft": "Hello user@example.com",
+    "tokens_used": 120,
+}
 
 
 def _gate_out(g: GateConfig) -> GateConfigOut:
@@ -31,6 +38,28 @@ def _gate_out(g: GateConfig) -> GateConfigOut:
         enabled=bool(g.enabled),
         config=json.loads(g.config_json or "{}"),
     )
+
+
+def _evaluate(gate: GateConfig, payload: dict) -> tuple[bool, dict]:
+    cfg = json.loads(gate.config_json or "{}")
+    if gate.gate_type == "schema":
+        required = cfg.get("required_keys") or []
+        missing = [k for k in required if k not in payload]
+        return (len(missing) == 0, {"missing": missing})
+    if gate.gate_type == "pii":
+        text = json.dumps(payload)
+        hits = []
+        for pat in cfg.get("patterns") or []:
+            hits.extend(re.findall(pat, text))
+        # Post gate passes if PII detected AND would be sanitized (we report hits)
+        return (True, {"pii_hits": hits, "sanitized": bool(hits)})
+    if gate.gate_type == "cost_budget":
+        used = int(payload.get("tokens_used") or 0)
+        max_tokens = int(cfg.get("max_tokens") or 15000)
+        return used <= max_tokens, {"tokens_used": used, "max_tokens": max_tokens}
+    if gate.gate_type == "rate_limit":
+        return True, {"rpm": cfg.get("rpm", 60)}
+    return True, {"custom": True}
 
 
 async def _ensure_defaults(db: AsyncSession, session_id: str) -> list[GateConfig]:
@@ -99,12 +128,13 @@ async def dry_run(
     for g in gates:
         if not g.enabled:
             continue
+        passed, details = _evaluate(g, SAMPLE_PAYLOAD)
         run = GateRun(
             id=new_id("grun"),
             session_id=session_id,
             gate_config_id=g.id,
-            passed=True,
-            details_json=json.dumps({"gate_type": g.gate_type, "stub": True}),
+            passed=passed,
+            details_json=json.dumps({"gate_type": g.gate_type, **details}),
             created_at=utc_now(),
         )
         db.add(run)
