@@ -1,0 +1,49 @@
+paths:
+  /api/v1/providers:
+    get:
+      tags: [providers]
+      summary: List LLM providers
+      operationId: listProviders
+      responses:
+        '200':
+          description: Providers
+  /api/v1/providers/{provider_id}:
+    patch:
+      tags: [providers]
+      summary: Update provider
+      operationId: updateProvider
+      parameters:
+        - { name: provider_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/ProviderUpdate
+      responses:
+        '200':
+          description: Updated provider
+  /api/v1/providers/{provider_id}/test:
+    post:
+      tags: [providers]
+      summary: Test provider connection
+      operationId: testProvider
+      parameters:
+        - { name: provider_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Health result
+  /api/v1/providers/order:
+    put:
+      tags: [providers]
+      summary: Set provider priority order
+      operationId: orderProviders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/ProviderOrderRequest
+      responses:
+        '200':
+          description: Reordered providers

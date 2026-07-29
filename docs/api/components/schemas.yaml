@@ -1,0 +1,340 @@
+components:
+  schemas:
+    ApiError:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details: { type: object, additionalProperties: true }
+
+    TierType:
+      type: string
+      enum: [TIER_1_CODE, TIER_2_CLASSICAL_ML, TIER_3_LLM_AGENT]
+
+    ProjectStatus:
+      type: string
+      enum: [draft, flow_pending, approved, architected, scaffolded, archived]
+
+    SessionStage:
+      type: string
+      enum:
+        - created
+        - discovery
+        - scope_ready
+        - flows
+        - flow_approved
+        - allocated
+        - architected
+        - gated
+        - scaffolded
+
+    HealthResponse:
+      type: object
+      required: [status, version, db_ok]
+      properties:
+        status: { type: string, enum: [ok, degraded, error] }
+        version: { type: string }
+        db_ok: { type: boolean }
+        providers_reachable: { type: boolean }
+
+    LicenseStatus:
+      type: object
+      required: [tier, status]
+      properties:
+        tier: { type: string, enum: [free, pro] }
+        status: { type: string, enum: [inactive, active, expired, revoked] }
+        license_key_last4: { type: string, nullable: true }
+        activated_at: { type: string, nullable: true }
+        expires_at: { type: string, nullable: true }
+        features: { type: array, items: { type: string } }
+
+    LicenseActivateRequest:
+      type: object
+      required: [license_key]
+      properties:
+        license_key: { type: string, minLength: 8 }
+
+    Project:
+      type: object
+      required: [id, name, status, created_at, updated_at]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        status: { $ref: '#/components/schemas/ProjectStatus' }
+        export_path: { type: string, nullable: true }
+        created_at: { type: string }
+        updated_at: { type: string }
+
+    ProjectCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string, default: '' }
+        export_path: { type: string, nullable: true }
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        status: { $ref: '#/components/schemas/ProjectStatus' }
+        export_path: { type: string, nullable: true }
+
+    StudioSession:
+      type: object
+      required: [id, project_id, stage, raw_user_prompt, flow_approved]
+      properties:
+        id: { type: string }
+        project_id: { type: string }
+        stage: { $ref: '#/components/schemas/SessionStage' }
+        raw_user_prompt: { type: string }
+        flow_approved: { type: boolean }
+        state: { type: object, additionalProperties: true }
+        token_usage: { type: integer }
+        created_at: { type: string }
+        updated_at: { type: string }
+
+    SessionCreate:
+      type: object
+      required: [project_id, raw_user_prompt]
+      properties:
+        project_id: { type: string }
+        raw_user_prompt: { type: string }
+
+    SessionEvent:
+      type: object
+      required: [id, session_id, event_type, created_at]
+      properties:
+        id: { type: string }
+        session_id: { type: string }
+        event_type: { type: string }
+        payload: { type: object, additionalProperties: true }
+        created_at: { type: string }
+
+    DiscoveryAnswerRequest:
+      type: object
+      required: [question_key, answer]
+      properties:
+        question_key: { type: string }
+        answer: { type: string }
+
+    DiscoveryMessage:
+      type: object
+      required: [id, role, content]
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [assistant, user, system] }
+        content: { type: string }
+        question_key: { type: string, nullable: true }
+        created_at: { type: string }
+
+    ScopeEnvelope:
+      type: object
+      required: [project_name, primary_goal, trigger_type, external_tools, human_in_loop, fallback_strategy]
+      properties:
+        project_name: { type: string }
+        primary_goal: { type: string }
+        trigger_type: { type: string, enum: [webhook, cron, manual] }
+        external_tools: { type: array, items: { type: string } }
+        human_in_loop: { type: boolean }
+        fallback_strategy: { type: string }
+
+    ScopeFinalizeRequest:
+      type: object
+      required: [scope]
+      properties:
+        scope: { $ref: '#/components/schemas/ScopeEnvelope' }
+
+    ScenarioStep:
+      type: object
+      required: [step_index, name]
+      properties:
+        step_index: { type: integer }
+        name: { type: string }
+        input_data: { type: object, additionalProperties: true }
+        processing_goal: { type: string }
+        expected_output: { type: string }
+        notes: { type: string }
+
+    ExecutionScenario:
+      type: object
+      required: [id, kind, title, steps]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [happy, ambiguity, failure] }
+        title: { type: string }
+        ascii_flow: { type: string }
+        mermaid_flow: { type: string }
+        sort_order: { type: integer }
+        is_approved: { type: boolean }
+        steps: { type: array, items: { $ref: '#/components/schemas/ScenarioStep' } }
+
+    FlowModifyRequest:
+      type: object
+      required: [step_index, changes]
+      properties:
+        step_index: { type: integer }
+        changes: { type: object, additionalProperties: true }
+        note: { type: string }
+
+    StepAllocation:
+      type: object
+      required: [step_id, step_name, allocated_tier, rationale, suggested_tech]
+      properties:
+        step_id: { type: integer }
+        step_name: { type: string }
+        description: { type: string }
+        allocated_tier: { $ref: '#/components/schemas/TierType' }
+        rationale: { type: string }
+        suggested_tech: { type: string }
+        user_override: { type: boolean }
+
+    AllocationOverride:
+      type: object
+      required: [allocated_tier]
+      properties:
+        allocated_tier: { $ref: '#/components/schemas/TierType' }
+        rationale: { type: string }
+
+    AgentSpec:
+      type: object
+      required: [name, role, system_prompt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        system_prompt: { type: string }
+        tools: { type: array, items: { type: string } }
+        model_recommendation: { type: string }
+
+    ToolSpec:
+      type: object
+      required: [name, description, side_effect_class]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        is_side_effecting: { type: boolean }
+        side_effect_class: { type: string, enum: [read_only, side_effecting] }
+        parameters: { type: object, additionalProperties: true }
+        timeout_seconds: { type: number, default: 30 }
+
+    ArchitectureBlueprint:
+      type: object
+      required: [id, session_id, agent_state_schema, graph_topology, agents, tools]
+      properties:
+        id: { type: string }
+        session_id: { type: string }
+        agent_state_schema: { type: object, additionalProperties: true }
+        graph_topology: { type: object, additionalProperties: true }
+        model_notes: { type: string }
+        agents: { type: array, items: { $ref: '#/components/schemas/AgentSpec' } }
+        tools: { type: array, items: { $ref: '#/components/schemas/ToolSpec' } }
+
+    GateConfig:
+      type: object
+      required: [id, gate_type, phase, enabled]
+      properties:
+        id: { type: string }
+        gate_type: { type: string, enum: [schema, pii, cost_budget, rate_limit, custom] }
+        phase: { type: string, enum: [pre, post] }
+        enabled: { type: boolean }
+        config: { type: object, additionalProperties: true }
+
+    GateRun:
+      type: object
+      required: [id, passed]
+      properties:
+        id: { type: string }
+        gate_config_id: { type: string, nullable: true }
+        passed: { type: boolean }
+        details: { type: object, additionalProperties: true }
+        created_at: { type: string }
+
+    ScaffoldJob:
+      type: object
+      required: [id, session_id, project_id, status]
+      properties:
+        id: { type: string }
+        session_id: { type: string }
+        project_id: { type: string }
+        status: { type: string, enum: [queued, running, passed, failed] }
+        output_dir: { type: string, nullable: true }
+        verification_passed: { type: boolean }
+        pytest_passed: { type: boolean }
+        ruff_passed: { type: boolean }
+        mypy_passed: { type: boolean }
+        error_summary: { type: string, nullable: true }
+        file_map: { type: object, additionalProperties: { type: string } }
+        started_at: { type: string, nullable: true }
+        finished_at: { type: string, nullable: true }
+
+    ScaffoldRunRequest:
+      type: object
+      properties:
+        write_to_disk: { type: boolean, default: false }
+        output_dir: { type: string, nullable: true }
+
+    Artifact:
+      type: object
+      required: [id, project_id, file_path, content_hash]
+      properties:
+        id: { type: string }
+        project_id: { type: string }
+        scaffold_job_id: { type: string, nullable: true }
+        file_path: { type: string }
+        content_hash: { type: string }
+        byte_size: { type: integer }
+        content_text: { type: string, nullable: true }
+        created_at: { type: string }
+
+    Provider:
+      type: object
+      required: [id, name, enabled, priority]
+      properties:
+        id: { type: string }
+        name: { type: string, enum: [ollama, anthropic, openai, deepseek] }
+        enabled: { type: boolean }
+        base_url: { type: string, nullable: true }
+        api_key_env_var: { type: string, nullable: true }
+        priority: { type: integer }
+        default_model: { type: string }
+        config: { type: object, additionalProperties: true }
+
+    ProviderUpdate:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        base_url: { type: string, nullable: true }
+        api_key_env_var: { type: string, nullable: true }
+        priority: { type: integer }
+        default_model: { type: string }
+        config: { type: object, additionalProperties: true }
+
+    ProviderHealth:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+        latency_ms: { type: integer, nullable: true }
+        message: { type: string }
+
+    ProviderOrderRequest:
+      type: object
+      required: [provider_ids]
+      properties:
+        provider_ids: { type: array, items: { type: string } }
+
+    SettingsMap:
+      type: object
+      additionalProperties: true
+
+    ProStubResponse:
+      type: object
+      required: [message, maturity]
+      properties:
+        message: { type: string }
+        maturity: { type: string, enum: [future] }

@@ -1,0 +1,40 @@
+paths:
+  /api/v1/scaffold/{session_id}/run:
+    post:
+      tags: [scaffold]
+      summary: Start scaffold job
+      operationId: runScaffold
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/ScaffoldRunRequest
+      responses:
+        '200':
+          description: Scaffold job
+        '409':
+          description: Architecture not ready
+  /api/v1/scaffold/{session_id}/jobs:
+    get:
+      tags: [scaffold]
+      summary: List scaffold jobs for session
+      operationId: listScaffoldJobs
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Jobs
+  /api/v1/scaffold/jobs/{job_id}:
+    get:
+      tags: [scaffold]
+      summary: Get scaffold job
+      operationId: getScaffoldJob
+      parameters:
+        - { name: job_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Job
+        '404':
+          description: Not found

@@ -1,0 +1,57 @@
+paths:
+  /api/v1/license:
+    get:
+      tags: [license]
+      summary: Get license status
+      operationId: getLicense
+      responses:
+        '200':
+          description: Current license state
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/LicenseStatus
+  /api/v1/license/activate:
+    post:
+      tags: [license]
+      summary: Activate a Pro license key
+      operationId: activateLicense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/LicenseActivateRequest
+      responses:
+        '200':
+          description: Activated
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/LicenseStatus
+        '400':
+          description: Invalid key format
+  /api/v1/license/deactivate:
+    post:
+      tags: [license]
+      summary: Deactivate license (return to free)
+      operationId: deactivateLicense
+      responses:
+        '200':
+          description: Deactivated
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/LicenseStatus
+  /api/v1/license/validate:
+    post:
+      tags: [license]
+      summary: Re-validate stored license
+      operationId: validateLicense
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/LicenseStatus

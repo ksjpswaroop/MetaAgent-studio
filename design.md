@@ -99,36 +99,15 @@ class StudioSessionState(BaseModel):
 
 ## 💾 3. Database Schema (`~/.metaagent/studio.db`)
 
-MetaAgent Studio uses SQLite for session management, project history, and template caching.
+MetaAgent Studio uses SQLite for session management, project history, license state, and template caching.
+
+> **Canonical schema:** See [`docs/database.md`](docs/database.md) and [`apps/api/app/db/schema.sql`](apps/api/app/db/schema.sql). The sketch below is historical; the running API applies the full migration set (projects, sessions, discovery, flows, allocations, blueprints, gates, scaffold jobs, artifacts, providers, settings, license).
 
 ```sql
--- Projects Table
-CREATE TABLE IF NOT EXISTS projects (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status TEXT NOT NULL -- 'draft', 'approved', 'scaffolded'
-);
-
--- Sessions / Iterations Table
-CREATE TABLE IF NOT EXISTS studio_sessions (
-    id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL,
-    state_json TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
-);
-
--- Generated Artifacts Log
-CREATE TABLE IF NOT EXISTS artifacts (
-    id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    content_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
-);
+-- See apps/api/app/db/schema.sql for the full DDL.
+-- Core entities include: app_meta, license_state, settings, projects,
+-- studio_sessions, scope_envelopes, execution_scenarios, step_allocations,
+-- architecture_blueprints, gate_configs, scaffold_jobs, artifacts, llm_providers.
 ```
 
 ---

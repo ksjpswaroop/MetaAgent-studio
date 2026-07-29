@@ -19,3 +19,16 @@ Cargo.lock
 .vscode/
 .idea/
 *.log
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+apps/api/.venv/
+
+# Local MetaAgent SQLite
+*.db
+*.db-wal
+*.db-shm

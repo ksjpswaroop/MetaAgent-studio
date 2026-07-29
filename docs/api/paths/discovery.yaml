@@ -1,0 +1,75 @@
+paths:
+  /api/v1/discovery/{session_id}/start:
+    post:
+      tags: [discovery]
+      summary: Start discovery Q&A
+      operationId: startDiscovery
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: First questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ../components/schemas.yaml#/components/schemas/DiscoveryMessage
+  /api/v1/discovery/{session_id}/answer:
+    post:
+      tags: [discovery]
+      summary: Submit discovery answer
+      operationId: answerDiscovery
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/DiscoveryAnswerRequest
+      responses:
+        '200':
+          description: Next message or acknowledgement
+  /api/v1/discovery/{session_id}/messages:
+    get:
+      tags: [discovery]
+      summary: List discovery messages
+      operationId: listDiscoveryMessages
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Messages
+  /api/v1/discovery/{session_id}/finalize:
+    post:
+      tags: [discovery]
+      summary: Finalize ScopeEnvelope
+      operationId: finalizeScope
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/ScopeFinalizeRequest
+      responses:
+        '200':
+          description: ScopeEnvelope
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/ScopeEnvelope
+  /api/v1/discovery/{session_id}/scope:
+    get:
+      tags: [discovery]
+      summary: Get ScopeEnvelope
+      operationId: getScope
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: ScopeEnvelope
+        '404':
+          description: Not finalized

@@ -1,0 +1,15 @@
+paths:
+  /api/v1/events/{session_id}/stream:
+    get:
+      tags: [events]
+      summary: SSE stream of session events
+      operationId: streamEvents
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: text/event-stream
+          content:
+            text/event-stream:
+              schema:
+                type: string

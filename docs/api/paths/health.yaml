@@ -1,0 +1,13 @@
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness and readiness
+      operationId: getHealth
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/HealthResponse
