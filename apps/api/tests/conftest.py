@@ -23,7 +23,7 @@ def pytest_configure():
 
 # Import app after env is set
 from app.config import settings  # noqa: E402
-from app.db.session import reset_engine  # noqa: E402
+from app.db.session import dispose_engine  # noqa: E402
 from app.main import app  # noqa: E402
 
 settings.llm_mode = os.environ.get("METAAGENT_LLM_MODE", "cassette")
@@ -33,7 +33,7 @@ settings.default_export_path = str(TEST_EXPORT)
 
 @pytest.fixture(autouse=True)
 async def fresh_db(tmp_path):
-    reset_engine()
+    await dispose_engine()
     if TEST_DB.exists():
         TEST_DB.unlink()
     for suffix in ("-wal", "-shm"):
@@ -42,7 +42,7 @@ async def fresh_db(tmp_path):
             p.unlink()
     TEST_EXPORT.mkdir(parents=True, exist_ok=True)
     yield
-    reset_engine()
+    await dispose_engine()
 
 
 @pytest.fixture

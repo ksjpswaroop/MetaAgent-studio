@@ -37,8 +37,16 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+async def dispose_engine() -> None:
+    global _engine, _session_factory
+    if _engine is not None:
+        await _engine.dispose()
+    _engine = None
+    _session_factory = None
+
+
 def reset_engine() -> None:
-    """Test helper to force engine recreation."""
+    """Sync helper used by tests; drops references (prefer dispose_engine in async)."""
     global _engine, _session_factory
     _engine = None
     _session_factory = None
