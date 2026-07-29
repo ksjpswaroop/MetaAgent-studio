@@ -61,5 +61,6 @@ uvicorn app.main:app --reload --port 8000
 11. [License & Pro](features/11-license-and-pro.md)
 12. [Settings](features/12-settings-and-telemetry-local.md)
 13. [Simulate / edge cases / prompts / package / improve](features/13-simulate-edge-prompts-package-improve.md)
+14. [Connectors & MCP](features/14-connectors-and-mcp.md)
 
 Also see [tdd-results.md](tdd-results.md) for cassette vs live test evidence.

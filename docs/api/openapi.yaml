@@ -30,6 +30,8 @@ tags:
   - name: prompts
   - name: package
   - name: improve
+  - name: connectors
+  - name: mcp
   - name: pro
     description: Future Pro routers (require active license)
 paths:
@@ -163,6 +165,18 @@ paths:
     $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs
   /api/v1/packs/{pack_id}/fork:
     $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs~1{pack_id}~1fork
+  /api/v1/connectors:
+    $ref: ./paths/connectors.yaml#/paths/~1api~1v1~1connectors
+  /api/v1/connectors/{connector_id}:
+    $ref: ./paths/connectors.yaml#/paths/~1api~1v1~1connectors~1{connector_id}
+  /api/v1/connectors/{connector_id}/test:
+    $ref: ./paths/connectors.yaml#/paths/~1api~1v1~1connectors~1{connector_id}~1test
+  /api/v1/mcp/servers:
+    $ref: ./paths/mcp.yaml#/paths/~1api~1v1~1mcp~1servers
+  /api/v1/mcp/servers/{server_id}:
+    $ref: ./paths/mcp.yaml#/paths/~1api~1v1~1mcp~1servers~1{server_id}
+  /api/v1/mcp/servers/{server_id}/test:
+    $ref: ./paths/mcp.yaml#/paths/~1api~1v1~1mcp~1servers~1{server_id}~1test
 components:
   schemas:
     $ref: ./components/schemas.yaml#/components/schemas

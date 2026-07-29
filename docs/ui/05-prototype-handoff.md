@@ -10,7 +10,7 @@ apps/desktop/src/
   styles/tokens.css
   components/shell/
   components/ui/
-  views/                  # Home, Studio, Check, Improve, Kits, Settings
+  views/                  # Home, Studio, Check, Improve, Kits, Connections, Settings
 ```
 
 ## Wiring FastAPI
@@ -23,6 +23,7 @@ apps/desktop/src/
    - flows generate/approve
    - allocation + architecture
    - package build / simulate / improve / packs
+   - connectors + MCP (`/api/v1/connectors`, `/api/v1/mcp/servers`)
 
 ## Extending a screen
 

@@ -7,6 +7,7 @@ const NAV: { id: ViewId; label: string }[] = [
   { id: "check", label: copy.nav.check },
   { id: "improve", label: copy.nav.improve },
   { id: "kits", label: copy.nav.kits },
+  { id: "connections", label: copy.nav.connections },
   { id: "settings", label: copy.nav.settings },
 ];
 

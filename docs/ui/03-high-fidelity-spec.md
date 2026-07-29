@@ -58,6 +58,13 @@ Step dots + title. Steps:
 
 - Glass tiles: name, score, Fork / Open
 
+### Connections
+
+- Tabs: **Apps & tools** | **MCP servers**
+- Apps: connect / disconnect / test; add custom REST base URL
+- MCP: list with transport (local command / SSE / HTTP), turn on/off, test, remove; add form
+- Plain status copy (“Looks good” / “Couldn’t reach it”)
+
 ### Settings
 
 - License key, Local/Cloud brain, export folder

@@ -9,7 +9,42 @@ export const copy = {
     check: "Make sure it works",
     improve: "Make it better",
     kits: "My saved kits",
+    connections: "Connections",
     settings: "Settings",
+  },
+  connections: {
+    title: "Connections",
+    support: "Plug in apps and tool servers your helper can use.",
+    tabApps: "Apps & tools",
+    tabMcp: "MCP servers",
+    appsBlurb: "Connect everyday apps. Secrets stay on this computer.",
+    mcpBlurb:
+      "MCP servers give your helper extra tools. Advanced — leave off if you’re unsure.",
+    connected: "Connected",
+    notConnected: "Not connected",
+    connect: "Connect",
+    disconnect: "Disconnect",
+    test: "Test",
+    testing: "Testing…",
+    addApp: "Add custom app",
+    addMcp: "Add MCP server",
+    name: "Name",
+    baseUrl: "Base URL",
+    command: "Command",
+    args: "Args (space-separated)",
+    transport: "How it runs",
+    transportStdio: "Local command",
+    transportSse: "SSE URL",
+    transportHttp: "HTTP URL",
+    enabled: "On",
+    disabled: "Off",
+    turnOn: "Turn on",
+    turnOff: "Turn off",
+    save: "Save",
+    remove: "Remove",
+    emptyMcp: "No MCP servers yet — add one below if you need extra tools.",
+    testOk: "Looks good",
+    testFail: "Couldn’t reach it — check the details",
   },
   home: {
     support: "Describe what you want. We’ll guide the rest.",
@@ -91,4 +126,5 @@ export type ViewId =
   | "check"
   | "improve"
   | "kits"
+  | "connections"
   | "settings";

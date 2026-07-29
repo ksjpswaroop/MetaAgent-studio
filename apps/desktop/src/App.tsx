@@ -3,6 +3,7 @@ import { AppShell } from "./components/shell/AppShell";
 import { copy, type ViewId } from "./copy/en";
 import { apiClient } from "./lib/apiClient";
 import { CheckView } from "./views/CheckView";
+import { ConnectionsView } from "./views/ConnectionsView";
 import { HomeView } from "./views/HomeView";
 import { ImproveView } from "./views/ImproveView";
 import { KitsView } from "./views/KitsView";
@@ -49,6 +50,9 @@ export default function App() {
       {view === "improve" && <ImproveView />}
       {view === "kits" && (
         <KitsView key={kitsTick} onOpenStudio={() => setView("studio")} />
+      )}
+      {view === "connections" && (
+        <ConnectionsView setStatus={setStatus} />
       )}
       {view === "settings" && <SettingsView />}
     </AppShell>

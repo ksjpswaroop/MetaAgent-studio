@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaAgent Studio — Connections</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="_shared.css" />
+    <style>
+      .tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 1.25rem; }
+      .tab {
+        border-radius: 999px;
+        padding: 0.4rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid var(--li-border);
+        background: #fff;
+        color: var(--li-muted);
+      }
+      .tab.on { background: var(--li-blue); color: #fff; border-color: transparent; }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+      .ok { color: var(--li-success); font-size: 0.75rem; font-weight: 600; }
+      .off { color: var(--li-muted); font-size: 0.75rem; font-weight: 600; }
+      .mono { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--li-blue-dark); }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="nav">
+        <p class="brand">MetaAgent Studio</p>
+        <p class="eyebrow">agent studio</p>
+        <a href="home.html">Start</a>
+        <a href="studio.html">Build my agent</a>
+        <a href="check.html">Make sure it works</a>
+        <a href="kits.html">My saved kits</a>
+        <a class="active" href="connections.html">Connections</a>
+      </aside>
+      <main class="main" style="max-width: 48rem">
+        <h2 class="display" style="margin: 0">Connections</h2>
+        <p class="muted" style="margin-top: 0.5rem">
+          Plug in apps and tool servers your helper can use.
+        </p>
+        <div class="tabs">
+          <span class="tab on">Apps &amp; tools</span>
+          <span class="tab">MCP servers</span>
+        </div>
+        <p class="muted" style="font-size: 0.9rem">
+          Connect everyday apps. Secrets stay on this computer.
+        </p>
+        <div class="glass row">
+          <div>
+            <strong class="display">Notion</strong>
+            <p class="muted" style="margin: 0.25rem 0; font-size: 0.875rem">Search pages and notes</p>
+            <span class="ok">Connected</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem">
+            <button class="btn btn-ghost" type="button">Test</button>
+            <button class="btn btn-ghost" type="button">Disconnect</button>
+          </div>
+        </div>
+        <div class="glass row">
+          <div>
+            <strong class="display">Gmail</strong>
+            <p class="muted" style="margin: 0.25rem 0; font-size: 0.875rem">Read and draft email</p>
+            <span class="off">Not connected</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem">
+            <button class="btn btn-ghost" type="button">Test</button>
+            <button class="btn btn-mag" type="button">Connect</button>
+          </div>
+        </div>
+        <div class="glass" style="margin-top: 1.25rem">
+          <h3 class="display" style="margin-top: 0">MCP servers (preview)</h3>
+          <p class="muted" style="font-size: 0.875rem">
+            Extra tools your helper can use — advanced.
+          </p>
+          <div class="row" style="margin-top: 1rem">
+            <div>
+              <strong>Fetch</strong>
+              <p class="mono">npx -y @modelcontextprotocol/server-fetch</p>
+              <span class="ok">On</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-ghost" type="button">Test</button>
+              <button class="btn btn-ghost" type="button">Turn off</button>
+            </div>
+          </div>
+        </div>
+        <p class="links">
+          <a href="kits.html">← Kits</a>
+          <a href="home.html">Home →</a>
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
