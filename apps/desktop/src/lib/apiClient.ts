@@ -1,17 +1,20 @@
 import { logger } from "./logger";
-import { migrateLegacyKey, storageGet, storageSet } from "./storage";
+import { storageGet, storageSet } from "./storage";
 
 export type SessionDraft = {
   id: string;
+  projectId: string;
   projectName: string;
   idea: string;
   stage: string;
 };
 
 export type PlanPath = {
-  id: "happy" | "ambiguity" | "failure";
+  id: string;
+  kind: string;
   title: string;
   summary: string;
+  asciiFlow: string;
 };
 
 export type RoleRow = {
@@ -25,6 +28,7 @@ export type CheckResult = {
   packageOk: boolean;
   testsOk: boolean;
   zipOk: boolean;
+  summary?: string;
 };
 
 export type EdgeItem = { id: string; title: string; detail: string };
@@ -38,7 +42,8 @@ export type ConnectorKind =
   | "notion"
   | "sheets"
   | "webhook"
-  | "custom";
+  | "custom"
+  | string;
 
 export type ConnectorItem = {
   id: string;
@@ -49,7 +54,7 @@ export type ConnectorItem = {
   baseUrl?: string;
 };
 
-export type McpTransport = "stdio" | "sse" | "http";
+export type McpTransport = "stdio" | "sse" | "http" | string;
 
 export type McpServerItem = {
   id: string;
@@ -61,138 +66,41 @@ export type McpServerItem = {
   enabled: boolean;
 };
 
-const mode = (import.meta.env.VITE_API_MODE as string) || "mock";
-const base = (import.meta.env.VITE_API_BASE as string) || "http://127.0.0.1:8000";
-
-const defaultConnectors: ConnectorItem[] = [
-  {
-    id: "conn_hermes",
-    kind: "hermes",
-    name: "Hermes Agent",
-    description: "Run and hand off work to a Hermes agent",
-    connected: false,
-    baseUrl: "http://127.0.0.1:8787",
-  },
-  {
-    id: "conn_gmail",
-    kind: "gmail",
-    name: "Gmail",
-    description: "Read and draft email",
-    connected: false,
-  },
-  {
-    id: "conn_slack",
-    kind: "slack",
-    name: "Slack",
-    description: "Post messages to channels",
-    connected: false,
-  },
-  {
-    id: "conn_notion",
-    kind: "notion",
-    name: "Notion",
-    description: "Search pages and notes",
-    connected: true,
-  },
-  {
-    id: "conn_sheets",
-    kind: "sheets",
-    name: "Google Sheets",
-    description: "Read and update rows",
-    connected: false,
-  },
-  {
-    id: "conn_webhook",
-    kind: "webhook",
-    name: "Webhook",
-    description: "Call your own HTTP endpoint",
-    connected: false,
-    baseUrl: "https://example.com/hook",
-  },
-];
-
-const defaultMcp: McpServerItem[] = [
-  {
-    id: "mcp_filesystem",
-    name: "Filesystem",
-    transport: "stdio",
-    command: "npx",
-    args: "-y @modelcontextprotocol/server-filesystem ~/Documents",
-    enabled: false,
-  },
-  {
-    id: "mcp_fetch",
-    name: "Fetch",
-    transport: "stdio",
-    command: "npx",
-    args: "-y @modelcontextprotocol/server-fetch",
-    enabled: true,
-  },
-];
-
-migrateLegacyKey("mas_kits", "kits");
-migrateLegacyKey("mas_connectors", "connectors");
-migrateLegacyKey("mas_mcp", "mcp");
-
-const memory = {
-  session: storageGet<SessionDraft | null>("session", null),
-  kits: storageGet<KitItem[]>("kits", []),
-  check: storageGet<CheckResult | null>("check", null),
-  connectors: null as ConnectorItem[] | null,
-  mcp: null as McpServerItem[] | null,
+export type DiscoveryQuestion = {
+  questionKey: string;
+  content: string;
 };
 
-function persistSession() {
-  storageSet("session", memory.session);
+export type HealthInfo = {
+  status: string;
+  dbOk: boolean;
+  providersReachable: boolean;
+};
+
+const mode = (import.meta.env.VITE_API_MODE as string) || "http";
+const base = (import.meta.env.VITE_API_BASE as string) || "http://127.0.0.1:8000";
+
+const TIER_LABEL: Record<string, string> = {
+  TIER_1_CODE: "Rules",
+  TIER_2_CLASSICAL_ML: "Smart match",
+  TIER_3_LLM_AGENT: "AI writer",
+};
+
+const KIND_LABEL: Record<string, string> = {
+  happy: "Smooth day",
+  ambiguity: "Missing pieces",
+  failure: "When things break",
+  happy_path: "Smooth day",
+  edge: "Missing pieces",
+  error: "When things break",
+};
+
+function persistSession(session: SessionDraft | null) {
+  storageSet("session", session);
 }
 
-function persistCheck() {
-  storageSet("check", memory.check);
-}
-
-function persistKits() {
-  storageSet("kits", memory.kits);
-}
-
-function mergeDefaultConnectors(stored: ConnectorItem[]): ConnectorItem[] {
-  const byId = new Map(stored.map((c) => [c.id, c]));
-  const merged: ConnectorItem[] = [];
-  for (const def of defaultConnectors) {
-    merged.push(byId.get(def.id) ?? def);
-    byId.delete(def.id);
-  }
-  for (const extra of byId.values()) merged.push(extra);
-  return merged;
-}
-
-function loadConnectors(): ConnectorItem[] {
-  if (memory.connectors) return memory.connectors;
-  const stored = storageGet<ConnectorItem[] | null>("connectors", null);
-  memory.connectors = stored
-    ? mergeDefaultConnectors(stored)
-    : [...defaultConnectors];
-  return memory.connectors;
-}
-
-function saveConnectors(list: ConnectorItem[]) {
-  memory.connectors = list;
-  storageSet("connectors", list);
-}
-
-function loadMcp(): McpServerItem[] {
-  if (memory.mcp) return memory.mcp;
-  const stored = storageGet<McpServerItem[] | null>("mcp", null);
-  memory.mcp = stored ?? [...defaultMcp];
-  return memory.mcp;
-}
-
-function saveMcp(list: McpServerItem[]) {
-  memory.mcp = list;
-  storageSet("mcp", list);
-}
-
-function uid(prefix: string) {
-  return `${prefix}_${Math.random().toString(16).slice(2, 10)}`;
+function loadSession(): SessionDraft | null {
+  return storageGet<SessionDraft | null>("session", null);
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -204,331 +112,443 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
     });
     if (!res.ok) {
-      logger.error("http", `${res.status} ${path}`);
-      throw new Error(`${res.status} ${path}`);
+      let detail = `${res.status} ${path}`;
+      try {
+        const body = await res.json();
+        detail = body.detail ? String(body.detail) : detail;
+      } catch {
+        /* ignore */
+      }
+      logger.error("http", detail);
+      throw new Error(detail);
     }
+    if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
   } catch (err) {
-    logger.error("http", `Request failed ${path}`, {
-      error: String(err),
-    });
+    logger.error("http", `Request failed ${path}`, { error: String(err) });
     throw err;
   }
 }
 
 export const apiClient = {
   mode: () => mode as "mock" | "http",
+  baseUrl: () => base,
+
+  async health(): Promise<HealthInfo> {
+    const h = await http<{
+      status: string;
+      db_ok: boolean;
+      providers_reachable: boolean;
+    }>("/health");
+    return {
+      status: h.status,
+      dbOk: h.db_ok,
+      providersReachable: h.providers_reachable,
+    };
+  },
+
+  async waitForApi(timeoutMs = 30000): Promise<HealthInfo> {
+    const start = Date.now();
+    let lastErr = "API not ready";
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const h = await this.health();
+        if (h.dbOk) return h;
+      } catch (e) {
+        lastErr = String(e);
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    throw new Error(lastErr);
+  },
 
   async createSession(idea: string): Promise<SessionDraft> {
-    if (mode === "http") {
-      const project = await http<{ id: string; name: string }>("/api/v1/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name: idea.slice(0, 40) || "My helper",
-          description: idea,
-        }),
-      });
-      const session = await http<{ id: string }>("/api/v1/sessions", {
-        method: "POST",
-        body: JSON.stringify({ project_id: project.id, raw_user_prompt: idea }),
-      });
-      memory.session = {
-        id: session.id,
-        projectName: project.name,
-        idea,
-        stage: "created",
-      };
-      persistSession();
-      logger.info("session", "Session created", { id: memory.session.id });
-      return memory.session;
-    }
-    memory.session = {
-      id: uid("sess"),
-      projectName: idea.slice(0, 40) || "My helper",
+    const project = await http<{ id: string; name: string }>("/api/v1/projects", {
+      method: "POST",
+      body: JSON.stringify({
+        name: idea.slice(0, 48) || "My helper",
+        description: idea,
+      }),
+    });
+    const session = await http<{
+      id: string;
+      project_id: string;
+      stage: string;
+      raw_user_prompt: string;
+    }>("/api/v1/sessions", {
+      method: "POST",
+      body: JSON.stringify({ project_id: project.id, raw_user_prompt: idea }),
+    });
+    const draft: SessionDraft = {
+      id: session.id,
+      projectId: project.id,
+      projectName: project.name,
       idea,
-      stage: "created",
+      stage: session.stage,
     };
-    persistSession();
-    logger.info("session", "Session created (mock)", { id: memory.session.id });
-    return memory.session;
+    persistSession(draft);
+    logger.info("session", "Session created", { id: draft.id });
+    return draft;
   },
 
   getSession(): SessionDraft | null {
-    return memory.session;
+    return loadSession();
   },
 
-  async discoveryQuestions(): Promise<string[]> {
-    logger.info("studio", "Loaded discovery questions");
-    return [
-      "When should this helper wake up? (message arrives / on a schedule / when you ask)",
-      "What outside tools does it need?",
-      "Should a person approve before it sends anything?",
-      "If a tool is busy, what should happen?",
-    ];
+  async refreshSession(): Promise<SessionDraft | null> {
+    const cur = loadSession();
+    if (!cur) return null;
+    const session = await http<{
+      id: string;
+      project_id: string;
+      stage: string;
+      raw_user_prompt: string;
+    }>(`/api/v1/sessions/${cur.id}`);
+    const draft: SessionDraft = {
+      id: session.id,
+      projectId: session.project_id,
+      projectName: cur.projectName,
+      idea: session.raw_user_prompt,
+      stage: session.stage,
+    };
+    persistSession(draft);
+    return draft;
+  },
+
+  async startDiscovery(): Promise<DiscoveryQuestion[]> {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    const msgs = await http<
+      { role: string; content: string; question_key: string | null }[]
+    >(`/api/v1/discovery/${sid}/start`, { method: "POST" });
+    const qs = msgs
+      .filter((m) => m.role === "assistant" && m.question_key)
+      .map((m) => ({
+        questionKey: m.question_key as string,
+        content: m.content,
+      }));
+    logger.info("studio", "Discovery started", { count: qs.length });
+    return qs;
+  },
+
+  async answerDiscovery(questionKey: string, answer: string): Promise<void> {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    await http(`/api/v1/discovery/${sid}/answer`, {
+      method: "POST",
+      body: JSON.stringify({ question_key: questionKey, answer }),
+    });
+  },
+
+  async finalizeDiscovery(): Promise<void> {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    await http(`/api/v1/discovery/${sid}/finalize`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    await this.refreshSession();
+    logger.info("studio", "Scope finalized");
   },
 
   async planPaths(): Promise<PlanPath[]> {
-    logger.info("studio", "Loaded plan paths");
-    return [
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    const scenarios = await http<
       {
-        id: "happy",
-        title: "Smooth day",
-        summary: "Everything arrives complete and tools respond.",
-      },
-      {
-        id: "ambiguity",
-        title: "Missing pieces",
-        summary: "Some details are unclear — we ask before acting.",
-      },
-      {
-        id: "failure",
-        title: "When things break",
-        summary: "A tool times out — we queue and try again safely.",
-      },
-    ];
+        id: string;
+        kind: string;
+        title: string;
+        ascii_flow: string;
+        steps: { processing_goal: string }[];
+      }[]
+    >(`/api/v1/flows/${sid}/generate`, { method: "POST" });
+    logger.info("studio", "Flows generated", { count: scenarios.length });
+    return scenarios.map((s) => ({
+      id: s.id,
+      kind: s.kind,
+      title: KIND_LABEL[s.kind] || s.title,
+      summary:
+        s.steps?.[0]?.processing_goal ||
+        s.ascii_flow ||
+        s.title,
+      asciiFlow: s.ascii_flow || s.title,
+    }));
+  },
+
+  async approvePlan(): Promise<void> {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    await http(`/api/v1/flows/${sid}/approve`, { method: "POST" });
+    await this.refreshSession();
+    logger.info("studio", "Plan approved");
   },
 
   async roles(): Promise<RoleRow[]> {
-    logger.info("studio", "Loaded role assignments");
-    return [
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    const alloc = await http<
       {
-        name: "Gatekeeper",
-        tierLabel: "Rules",
-        blurb: "Checks the input is complete and safe.",
-      },
-      {
-        name: "Librarian",
-        tierLabel: "Smart match",
-        blurb: "Finds the most relevant notes.",
-      },
-      {
-        name: "Writer",
-        tierLabel: "AI writer",
-        blurb: "Drafts a clear, kind reply.",
-      },
-    ];
+        step_name: string;
+        description: string;
+        allocated_tier: string;
+        rationale: string;
+      }[]
+    >(`/api/v1/allocation/${sid}/run`, { method: "POST" });
+    await http(`/api/v1/architecture/${sid}/build`, { method: "POST" });
+    await this.refreshSession();
+    logger.info("studio", "Allocation + architecture ready");
+    return alloc.map((a) => ({
+      name: a.step_name,
+      tierLabel: TIER_LABEL[a.allocated_tier] || a.allocated_tier,
+      blurb: a.rationale || a.description || "",
+    }));
   },
 
   async buildKit(): Promise<CheckResult> {
-    if (mode === "http" && memory.session) {
-      await http(`/api/v1/package/${memory.session.id}/build`, {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    await http(`/api/v1/gates/${sid}/dry-run`, { method: "POST" });
+    await http(`/api/v1/scaffold/${sid}/run`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    const pkg = await http<{
+      pytest_passed: boolean;
+      zip_path: string | null;
+      checksum_sha256: string | null;
+      status: string;
+      files: unknown[];
+    }>(`/api/v1/package/${sid}/build`, {
+      method: "POST",
+      body: JSON.stringify({ run_verify: true }),
+    });
+    let overall = 0.7;
+    let summary = "Package built";
+    try {
+      const sim = await http<{
+        score: { overall: number };
+        summary: string;
+        status: string;
+      }>(`/api/v1/simulate/${sid}/run`, {
         method: "POST",
-        body: JSON.stringify({ run_verify: true }),
-      }).catch(() => null);
+        body: JSON.stringify({ include_all_scenarios: true }),
+      });
+      overall = sim.score?.overall ?? overall;
+      summary = sim.summary || summary;
+    } catch (e) {
+      logger.warn("package", "Simulate skipped", { error: String(e) });
     }
-    memory.check = {
-      overall: 0.82,
-      packageOk: true,
-      testsOk: true,
-      zipOk: true,
+    const check: CheckResult = {
+      overall,
+      packageOk: (pkg.files?.length ?? 0) > 0 || pkg.status === "ready",
+      testsOk: Boolean(pkg.pytest_passed),
+      zipOk: Boolean(pkg.zip_path && pkg.checksum_sha256),
+      summary,
     };
-    if (memory.session) {
-      memory.session = { ...memory.session, stage: "scaffolded" };
-      persistSession();
-    }
-    persistCheck();
-    logger.info("package", "Kit built", { score: memory.check.overall });
-    return memory.check;
+    storageSet("check", check);
+    await this.refreshSession();
+    logger.info("package", "Kit built", { score: check.overall });
+    return check;
   },
 
   getCheck(): CheckResult | null {
-    return memory.check;
+    return storageGet<CheckResult | null>("check", null);
   },
 
   async edgeCases(): Promise<EdgeItem[]> {
-    return [
-      {
-        id: "e1",
-        title: "Notes search is slow",
-        detail: "Helper should wait, then use a backup path.",
-      },
-      {
-        id: "e2",
-        title: "Message has no name",
-        detail: "Ask a short clarifying question.",
-      },
-    ];
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    let edges = await http<
+      { id: string; title: string; description: string; expected_behavior: string }[]
+    >(`/api/v1/edge-cases/${sid}`);
+    if (!edges.length) {
+      edges = await http(`/api/v1/edge-cases/${sid}/generate`, {
+        method: "POST",
+        body: JSON.stringify({ count: 4 }),
+      });
+    }
+    return edges.map((e) => ({
+      id: e.id,
+      title: e.title,
+      detail: e.description || e.expected_behavior || "",
+    }));
   },
 
   async codingPrompts(): Promise<PromptItem[]> {
-    return [
-      {
-        id: "p1",
-        title: "Handle slow notes search",
-        prompt:
-          "In the retrieval step, add a timeout and route to a fallback queue. Add a test for the timeout path.",
-      },
-    ];
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    let prompts = await http<
+      { id: string; title: string; prompt_text: string }[]
+    >(`/api/v1/prompts/${sid}`);
+    if (!prompts.length) {
+      prompts = await http(`/api/v1/prompts/${sid}/generate`, {
+        method: "POST",
+        body: JSON.stringify({ tool_target: "cursor" }),
+      });
+    }
+    return prompts.map((p) => ({
+      id: p.id,
+      title: p.title,
+      prompt: p.prompt_text,
+    }));
+  },
+
+  async iterateImprove(): Promise<{ notes: string; scoreAfter: number | null }> {
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    const it = await http<{
+      notes: string;
+      score_after: number | null;
+    }>(`/api/v1/improve/${sid}/iterate`, {
+      method: "POST",
+      body: JSON.stringify({
+        auto_attach_edge_cases: true,
+        generate_prompts: true,
+      }),
+    });
+    logger.info("improve", "Iteration complete", {
+      score: it.score_after,
+    });
+    return { notes: it.notes, scoreAfter: it.score_after };
   },
 
   async saveKit(name: string): Promise<KitItem> {
-    const kit = {
-      id: uid("kit"),
-      name,
-      score: memory.check?.overall ?? 0.7,
-    };
-    memory.kits = [kit, ...memory.kits];
-    persistKits();
-    logger.info("kits", "Kit saved", { id: kit.id, name: kit.name });
+    const sid = loadSession()?.id;
+    if (!sid) throw new Error("No session");
+    const pack = await http<{ id: string; name: string; best_score: number }>(
+      `/api/v1/improve/${sid}/publish-local`,
+      {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      },
+    );
+    const kit = { id: pack.id, name: pack.name, score: pack.best_score };
+    logger.info("kits", "Kit saved", { id: kit.id });
     return kit;
   },
 
-  listKits(): KitItem[] {
-    if (!memory.kits.length) {
-      memory.kits = storageGet<KitItem[]>("kits", []);
-    }
-    return memory.kits;
+  async listKits(): Promise<KitItem[]> {
+    const packs = await http<{ id: string; name: string; best_score: number }[]>(
+      "/api/v1/packs",
+    );
+    return packs.map((p) => ({
+      id: p.id,
+      name: p.name,
+      score: p.best_score,
+    }));
+  },
+
+  async forkKit(packId: string): Promise<SessionDraft> {
+    const session = await http<{
+      id: string;
+      project_id: string;
+      stage: string;
+      raw_user_prompt: string;
+    }>(`/api/v1/packs/${packId}/fork`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    const draft: SessionDraft = {
+      id: session.id,
+      projectId: session.project_id,
+      projectName: "Forked kit",
+      idea: session.raw_user_prompt,
+      stage: session.stage,
+    };
+    persistSession(draft);
+    logger.info("kits", "Kit forked", { packId, sessionId: draft.id });
+    return draft;
   },
 
   async activateLicense(key: string): Promise<{ ok: boolean; message: string }> {
-    if (mode === "http") {
-      try {
-        await http("/api/v1/license/activate", {
-          method: "POST",
-          body: JSON.stringify({ license_key: key }),
-        });
-        logger.info("license", "Pro unlocked");
-        return { ok: true, message: "Pro unlocked" };
-      } catch {
-        logger.warn("license", "Activation failed");
-        return { ok: false, message: "Could not activate" };
-      }
+    try {
+      await http("/api/v1/license/activate", {
+        method: "POST",
+        body: JSON.stringify({ license_key: key }),
+      });
+      return { ok: true, message: "Pro unlocked" };
+    } catch {
+      return { ok: false, message: "Could not activate" };
     }
-    const ok = /^MAS-PRO-/i.test(key.trim());
-    logger.info("license", ok ? "Pro unlocked (mock)" : "Invalid license format");
-    return {
-      ok,
-      message: ok ? "Pro unlocked (mock)" : "Use MAS-PRO-XXXX-XXXX-XXXX",
-    };
+  },
+
+  async licenseStatus(): Promise<{
+    tier: string;
+    status: string;
+    features: string[];
+  }> {
+    return http("/api/v1/license");
+  },
+
+  async getSettings(): Promise<Record<string, unknown>> {
+    return http("/api/v1/settings");
+  },
+
+  async putSettings(patch: Record<string, unknown>): Promise<void> {
+    await http("/api/v1/settings", {
+      method: "PUT",
+      body: JSON.stringify(patch),
+    });
+    logger.info("settings", "Settings updated", { keys: Object.keys(patch) });
+  },
+
+  async listProviders(): Promise<
+    { id: string; name: string; enabled: boolean; default_model: string }[]
+  > {
+    return http("/api/v1/providers");
+  },
+
+  async testProvider(id: string): Promise<{ ok: boolean; message: string; latency_ms?: number }> {
+    return http(`/api/v1/providers/${id}/test`, { method: "POST" });
   },
 
   async listConnectors(): Promise<ConnectorItem[]> {
-    return loadConnectors().map((c) => ({ ...c }));
+    return http("/api/v1/connectors");
   },
 
   async setConnectorConnected(
     id: string,
     connected: boolean,
   ): Promise<ConnectorItem> {
-    if (mode === "http") {
-      try {
-        const updated = await http<ConnectorItem>(`/api/v1/connectors/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ connected }),
-        });
-        logger.info("connectors", connected ? "Connected" : "Disconnected", {
-          id,
-        });
-        return updated;
-      } catch {
-        /* fall through */
-      }
-    }
-    const list = loadConnectors();
-    const next = list.map((c) => (c.id === id ? { ...c, connected } : c));
-    saveConnectors(next);
-    const found = next.find((c) => c.id === id);
-    if (!found) {
-      logger.error("connectors", "Connector not found", { id });
-      throw new Error("connector not found");
-    }
+    const updated = await http<ConnectorItem>(`/api/v1/connectors/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ connected }),
+    });
     logger.info(
       "connectors",
-      connected ? `${found.name} connected` : `${found.name} disconnected`,
-      { id },
+      connected ? `${updated.name} connected` : `${updated.name} disconnected`,
     );
-    return found;
+    return updated;
   },
 
   async addCustomConnector(input: {
     name: string;
     baseUrl: string;
   }): Promise<ConnectorItem> {
-    if (mode === "http") {
-      try {
-        const created = await http<ConnectorItem>("/api/v1/connectors", {
-          method: "POST",
-          body: JSON.stringify({
-            kind: "custom",
-            name: input.name,
-            base_url: input.baseUrl,
-          }),
-        });
-        logger.info("connectors", "Custom connector added", { id: created.id });
-        return created;
-      } catch {
-        /* fall through */
-      }
-    }
-    const item: ConnectorItem = {
-      id: uid("conn"),
-      kind: "custom",
-      name: input.name,
-      description: "Custom REST connector",
-      connected: true,
-      baseUrl: input.baseUrl,
-    };
-    saveConnectors([item, ...loadConnectors()]);
-    logger.info("connectors", "Custom connector added", { id: item.id });
-    return item;
+    return http("/api/v1/connectors", {
+      method: "POST",
+      body: JSON.stringify({
+        kind: "custom",
+        name: input.name,
+        base_url: input.baseUrl,
+      }),
+    });
   },
 
   async testConnector(id: string): Promise<{ ok: boolean; message: string }> {
-    if (mode === "http") {
-      try {
-        const res = await http<{ ok: boolean; message: string }>(
-          `/api/v1/connectors/${id}/test`,
-          { method: "POST" },
-        );
-        logger.info("connectors", res.ok ? "Test ok" : "Test failed", { id });
-        return res;
-      } catch {
-        logger.warn("connectors", "Test failed", { id });
-        return { ok: false, message: "Couldn’t reach it — check the details" };
-      }
-    }
-    const c = loadConnectors().find((x) => x.id === id);
-    if (!c) {
-      logger.warn("connectors", "Test failed — missing", { id });
-      return { ok: false, message: "Couldn’t reach it — check the details" };
-    }
-    const ok = c.connected || c.kind === "webhook" || c.kind === "hermes";
-    logger.info("connectors", ok ? "Test ok" : "Test failed", {
-      id,
-      name: c.name,
-    });
-    return {
-      ok,
-      message: ok ? "Looks good" : "Connect first, then test",
-    };
+    return http(`/api/v1/connectors/${id}/test`, { method: "POST" });
   },
 
   async listMcpServers(): Promise<McpServerItem[]> {
-    return loadMcp().map((s) => ({ ...s }));
+    return http("/api/v1/mcp/servers");
   },
 
   async setMcpEnabled(id: string, enabled: boolean): Promise<McpServerItem> {
-    if (mode === "http") {
-      try {
-        return await http<McpServerItem>(`/api/v1/mcp/servers/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ enabled }),
-        });
-      } catch {
-        /* fall through */
-      }
-    }
-    const next = loadMcp().map((s) => (s.id === id ? { ...s, enabled } : s));
-    saveMcp(next);
-    const found = next.find((s) => s.id === id);
-    if (!found) {
-      logger.error("mcp", "Server not found", { id });
-      throw new Error("mcp server not found");
-    }
-    logger.info("mcp", enabled ? `${found.name} on` : `${found.name} off`, {
-      id,
+    return http(`/api/v1/mcp/servers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
     });
-    return found;
   },
 
   async addMcpServer(input: {
@@ -538,66 +558,17 @@ export const apiClient = {
     args?: string;
     url?: string;
   }): Promise<McpServerItem> {
-    if (mode === "http") {
-      try {
-        return await http<McpServerItem>("/api/v1/mcp/servers", {
-          method: "POST",
-          body: JSON.stringify(input),
-        });
-      } catch {
-        /* fall through */
-      }
-    }
-    const item: McpServerItem = {
-      id: uid("mcp"),
-      name: input.name,
-      transport: input.transport,
-      command: input.command,
-      args: input.args,
-      url: input.url,
-      enabled: true,
-    };
-    saveMcp([item, ...loadMcp()]);
-    logger.info("mcp", "Server added", { id: item.id, name: item.name });
-    return item;
+    return http("/api/v1/mcp/servers", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 
   async removeMcpServer(id: string): Promise<void> {
-    if (mode === "http") {
-      try {
-        await http(`/api/v1/mcp/servers/${id}`, { method: "DELETE" });
-        logger.info("mcp", "Server removed", { id });
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
-    saveMcp(loadMcp().filter((s) => s.id !== id));
-    logger.info("mcp", "Server removed", { id });
+    await http(`/api/v1/mcp/servers/${id}`, { method: "DELETE" });
   },
 
   async testMcpServer(id: string): Promise<{ ok: boolean; message: string }> {
-    if (mode === "http") {
-      try {
-        return await http<{ ok: boolean; message: string }>(
-          `/api/v1/mcp/servers/${id}/test`,
-          { method: "POST" },
-        );
-      } catch {
-        logger.warn("mcp", "Test failed", { id });
-        return { ok: false, message: "Couldn’t reach it — check the details" };
-      }
-    }
-    const s = loadMcp().find((x) => x.id === id);
-    if (!s) {
-      logger.warn("mcp", "Test failed — missing", { id });
-      return { ok: false, message: "Couldn’t reach it — check the details" };
-    }
-    const ok = Boolean(s.enabled && (s.command || s.url));
-    logger.info("mcp", ok ? "Test ok" : "Test failed", { id, name: s.name });
-    return {
-      ok,
-      message: ok ? "Looks good" : "Couldn’t reach it — check the details",
-    };
+    return http(`/api/v1/mcp/servers/${id}/test`, { method: "POST" });
   },
 };

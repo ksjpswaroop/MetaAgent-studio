@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import httpx
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import __version__
+from app.config import settings
 from app.db.session import get_db
 from app.models.schemas import HealthResponse
 
@@ -19,9 +21,18 @@ async def health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         db_ok = True
     except Exception:
         db_ok = False
+
+    providers_reachable = False
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            resp = await client.get(settings.ollama_base_url.rstrip("/") + "/api/tags")
+            providers_reachable = resp.status_code == 200
+    except Exception:
+        providers_reachable = False
+
     return HealthResponse(
         status="ok" if db_ok else "error",
         version=__version__,
         db_ok=db_ok,
-        providers_reachable=False,
+        providers_reachable=providers_reachable,
     )

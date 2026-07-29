@@ -1,20 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { copy } from "../copy/en";
-import { apiClient, KitItem } from "../lib/apiClient";
+import { apiClient, type KitItem } from "../lib/apiClient";
+import { appState } from "../lib/appState";
 import { GlassPanel } from "../components/ui/GlassPanel";
 import { VapButton } from "../components/ui/VapButton";
 
 type Props = { onOpenStudio: () => void };
 
 export function KitsView({ onOpenStudio }: Props) {
-  const [kits, setKits] = useState<KitItem[]>(() => apiClient.listKits());
+  const [kits, setKits] = useState<KitItem[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiClient
+      .listKits()
+      .then(setKits)
+      .catch((e) => setError(String(e)));
+  }, []);
+
+  if (error) {
+    return (
+      <GlassPanel className="mx-auto max-w-xl p-8 text-center">
+        <p className="text-sm text-[var(--li-warn)]">{error}</p>
+      </GlassPanel>
+    );
+  }
 
   if (!kits.length) {
     return (
       <GlassPanel className="mx-auto max-w-xl p-8 text-center">
         <h2 className="font-display text-xl font-semibold">{copy.kits.title}</h2>
         <p className="mt-3 text-sm text-[var(--vap-muted)]">{copy.kits.empty}</p>
-        <VapButton className="mt-6" variant="cyan" onClick={onOpenStudio}>
+        <VapButton className="mt-6" variant="cyan" onClick={() => appState.setView("home")}>
           {copy.nav.home}
         </VapButton>
       </GlassPanel>
@@ -37,15 +54,17 @@ export function KitsView({ onOpenStudio }: Props) {
               </VapButton>
               <VapButton
                 variant="cyan"
-                onClick={() => {
-                  const forked = {
-                    ...k,
-                    id: `${k.id}_fork`,
-                    name: `${k.name} copy`,
-                  };
-                  const next = [forked, ...kits];
-                  localStorage.setItem("mas_kits", JSON.stringify(next));
-                  setKits(next);
+                onClick={async () => {
+                  try {
+                    const session = await apiClient.forkKit(k.id);
+                    appState.setIdea(session.idea);
+                    appState.resetStudio();
+                    onOpenStudio();
+                    const next = await apiClient.listKits();
+                    setKits(next);
+                  } catch (e) {
+                    setError(String(e));
+                  }
                 }}
               >
                 {copy.kits.fork}

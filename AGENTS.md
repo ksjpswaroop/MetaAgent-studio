@@ -156,11 +156,16 @@ All agent systems scaffolded by MetaAgent Studio MUST adhere to these standard o
 
 ## Cursor Cloud specific instructions
 
-The only implemented product today is the **Tauri v2 + React/Vite desktop app** in `apps/desktop` (the Python/LangGraph backend in the docs above is vision-only and not yet in the repo). All commands below run from `apps/desktop`. Package manager is **pnpm**; scripts live in `apps/desktop/package.json`.
+Implemented today:
 
-- Lint/typecheck + build: `pnpm build` (runs `tsc` then `vite build`). There is no separate lint script and no test suite yet.
-- Frontend-only dev (fast, no Rust): `pnpm dev` → Vite on `http://localhost:1420` (strict port).
-- Full desktop app: `pnpm tauri dev` (auto-runs Vite via `beforeDevCommand`, compiles the Rust core, opens the window). Run it with `DISPLAY=:1` so the GUI window renders on the VM's virtual display. First Rust compile takes ~1–2 min; subsequent runs are cached in `apps/desktop/src-tauri/target`.
-- Rust toolchain gotcha: the desktop build needs Rust **1.85+** (a transitive crate requires the `edition2024` Cargo feature). If `cargo`/`rustc` reports an older version (e.g. 1.83), run `rustup default stable` before `pnpm tauri dev`. `Cargo.lock` is gitignored, so newest crate versions are resolved on a fresh checkout.
-- The `libEGL warning: DRI3 ...` lines at startup are harmless (software rendering); the window still works.
-- Core smoke test: in the running window, type a name into the "Rust IPC Bridge Test" input and click **Invoke Command** — the "OUTPUT FROM RUST BACKEND" panel should echo `Hello, <name>! Welcome to MetaAgent Studio ...`, confirming the React↔Rust IPC path.
+- **Desktop** — Tauri v2 + React/Vite in `apps/desktop` (HTTP to local API).
+- **API** — FastAPI + SQLite in `apps/api` (live Ollama or cassette LLM).
+
+Investor demo (Linux, no license key): `./scripts/demo-linux.sh` — see [`docs/demo-investor.md`](docs/demo-investor.md).
+
+Desktop commands (from `apps/desktop`):
+
+- Lint/typecheck + build: `pnpm build` (runs `tsc` then `vite build`).
+- Frontend-only: `pnpm dev` → Vite on `http://localhost:1420` (needs API on `:8000`).
+- Full desktop: `DISPLAY=:1 pnpm tauri dev` (spawns API sidecar when possible). Rust **1.85+** (`rustup default stable`).
+- Settings → Developer → Test Rust bridge still exercises `greet`.

@@ -12,13 +12,56 @@ from app.utils.ids import new_id
 from app.utils.time import utc_now
 
 
+_FALLBACK_QUESTIONS = [
+    {
+        "question_key": "trigger_type",
+        "content": "When should this helper wake up? (message arrives / on a schedule / when you ask)",
+    },
+    {
+        "question_key": "external_tools",
+        "content": "What outside tools does it need? (email, docs, chat, webhooks…)",
+    },
+    {
+        "question_key": "human_in_loop",
+        "content": "Should a person approve before it sends anything?",
+    },
+    {
+        "question_key": "fallback_strategy",
+        "content": "If a tool is busy or fails, what should happen?",
+    },
+]
+
+
+def _normalize_questions(data: dict) -> list[dict]:
+    raw = data.get("questions") or []
+    out: list[dict] = []
+    for i, q in enumerate(raw):
+        if not isinstance(q, dict):
+            continue
+        content = (q.get("content") or q.get("question") or q.get("text") or "").strip()
+        key = (q.get("question_key") or q.get("key") or f"q_{i}").strip()
+        if not content:
+            continue
+        out.append({"question_key": key, "content": content})
+    return out or list(_FALLBACK_QUESTIONS)
+
+
 async def start_discovery(db: AsyncSession, session: StudioSession) -> list[DiscoveryMessage]:
-    data = await chat_json(
-        db,
-        task="discovery_questions",
-        system="You are RequirementsArchitectAgent. Return JSON with questions array.",
-        user=session.raw_user_prompt,
-    )
+    try:
+        data = await chat_json(
+            db,
+            task="discovery_questions",
+            system=(
+                "You are RequirementsArchitectAgent. Return ONLY JSON like "
+                '{"questions":[{"question_key":"trigger_type","content":"..."},...]} '
+                "with 3-5 plain-language questions. Each item MUST include non-empty "
+                "question_key and content."
+            ),
+            user=session.raw_user_prompt,
+        )
+    except Exception:
+        data = {"questions": _FALLBACK_QUESTIONS}
+    questions = _normalize_questions(data if isinstance(data, dict) else {})
     session.stage = "discovery"
     session.updated_at = utc_now()
     created: list[DiscoveryMessage] = []
@@ -32,13 +75,13 @@ async def start_discovery(db: AsyncSession, session: StudioSession) -> list[Disc
     )
     db.add(intro)
     created.append(intro)
-    for q in data.get("questions", []):
+    for q in questions:
         msg = DiscoveryMessage(
             id=new_id("dmsg"),
             session_id=session.id,
             role="assistant",
-            content=q.get("content", ""),
-            question_key=q.get("question_key"),
+            content=q["content"],
+            question_key=q["question_key"],
             created_at=utc_now(),
         )
         db.add(msg)

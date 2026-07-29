@@ -12,6 +12,7 @@ from app.routers import (
     allocation,
     architecture,
     artifacts,
+    connectors,
     discovery,
     edge_cases,
     events,
@@ -20,6 +21,7 @@ from app.routers import (
     health,
     improve,
     license,
+    mcp,
     package,
     pro,
     projects,
@@ -76,3 +78,5 @@ app.include_router(simulate.router)
 app.include_router(prompts.router)
 app.include_router(package.router)
 app.include_router(improve.router)
+app.include_router(connectors.router)
+app.include_router(mcp.router)

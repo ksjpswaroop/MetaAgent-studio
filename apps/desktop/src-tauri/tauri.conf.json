@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "MetaAgent Studio",
-        "width": 1100,
-        "height": 720,
+        "width": 1180,
+        "height": 780,
         "resizable": true,
         "center": true
       }
@@ -25,7 +25,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["appimage", "deb"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

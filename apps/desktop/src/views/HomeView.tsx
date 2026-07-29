@@ -5,9 +5,10 @@ import { VapTextarea } from "../components/ui/VapInput";
 
 type Props = {
   onStart: (idea: string) => void;
+  disabled?: boolean;
 };
 
-export function HomeView({ onStart }: Props) {
+export function HomeView({ onStart, disabled }: Props) {
   const [idea, setIdea] = useState("");
 
   return (
@@ -42,10 +43,10 @@ export function HomeView({ onStart }: Props) {
         </div>
         <VapButton
           variant="cyan"
-          disabled={!idea.trim()}
+          disabled={disabled || !idea.trim()}
           onClick={() => onStart(idea.trim())}
         >
-          {copy.home.cta}
+          {disabled ? "Starting studio…" : copy.home.cta}
         </VapButton>
       </div>
     </section>

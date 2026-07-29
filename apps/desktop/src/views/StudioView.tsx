@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { copy } from "../copy/en";
-import { apiClient, type PlanPath, type RoleRow } from "../lib/apiClient";
+import {
+  apiClient,
+  type DiscoveryQuestion,
+  type PlanPath,
+  type RoleRow,
+} from "../lib/apiClient";
 import { appState } from "../lib/appState";
 import { logger } from "../lib/logger";
 import { GlassPanel } from "../components/ui/GlassPanel";
@@ -19,48 +24,79 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
   const saved = appState.get().studio;
   const [step, setStep] = useState(saved.step);
   const [draft, setDraft] = useState(idea);
-  const [questions, setQuestions] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<DiscoveryQuestion[]>([]);
   const [answers, setAnswers] = useState<string[]>(saved.answers);
   const [answer, setAnswer] = useState("");
   const [qIndex, setQIndex] = useState(saved.qIndex);
   const [paths, setPaths] = useState<PlanPath[]>([]);
-  const [activePath, setActivePath] = useState<PlanPath["id"]>(saved.activePath);
+  const [activePath, setActivePath] = useState<string>(saved.activePath);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [building, setBuilding] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setDraft(idea);
   }, [idea]);
 
   useEffect(() => {
-    appState.patchStudio({ step, answers, qIndex, activePath });
+    appState.patchStudio({
+      step,
+      answers,
+      qIndex,
+      activePath: activePath as "happy" | "ambiguity" | "failure",
+    });
   }, [step, answers, qIndex, activePath]);
 
   useEffect(() => {
     if (step === 1 && !questions.length) {
       setStatus(copy.statusThinking);
-      apiClient.discoveryQuestions().then((qs) => {
-        setQuestions(qs);
-        setStatus(copy.statusReady);
-      });
+      setError("");
+      apiClient
+        .startDiscovery()
+        .then((qs) => {
+          setQuestions(qs);
+          setStatus(copy.statusReady);
+        })
+        .catch((e) => {
+          setError(String(e));
+          setStatus(copy.statusReady);
+          logger.error("studio", "Discovery failed", { error: String(e) });
+        });
     }
     if (step === 2 && !paths.length) {
-      apiClient.planPaths().then(setPaths);
+      setStatus(copy.statusThinking);
+      setError("");
+      apiClient
+        .planPaths()
+        .then((p) => {
+          setPaths(p);
+          if (p[0]) setActivePath(p[0].kind);
+          setStatus(copy.statusReady);
+        })
+        .catch((e) => {
+          setError(String(e));
+          setStatus(copy.statusReady);
+        });
     }
     if (step === 3 && !roles.length) {
-      apiClient.roles().then(setRoles);
+      setStatus(copy.statusThinking);
+      setError("");
+      apiClient
+        .roles()
+        .then((r) => {
+          setRoles(r);
+          setStatus(copy.statusReady);
+        })
+        .catch((e) => {
+          setError(String(e));
+          setStatus(copy.statusReady);
+        });
     }
   }, [step, questions.length, paths.length, roles.length, setStatus]);
 
-  const pathCopy =
-    activePath === "happy"
-      ? copy.pathsAscii.happy
-      : activePath === "ambiguity"
-        ? copy.pathsAscii.ambiguity
-        : copy.pathsAscii.failure;
-
   function goStep(next: number) {
     setStep(next);
+    setError("");
     logger.info("studio", `Wizard step ${next + 1}`, {
       label: copy.studio.steps[next],
     });
@@ -69,15 +105,31 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
   async function finishBuild() {
     setBuilding(true);
     setStatus(copy.statusThinking);
-    await apiClient.buildKit();
-    setStatus(copy.statusReady);
-    setBuilding(false);
-    onBuilt();
+    setError("");
+    try {
+      await apiClient.buildKit();
+      setStatus(copy.statusReady);
+      onBuilt();
+    } catch (e) {
+      setError(String(e));
+      setStatus(copy.statusReady);
+    } finally {
+      setBuilding(false);
+    }
   }
+
+  const active = paths.find((p) => p.kind === activePath) || paths[0];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <StepDots steps={copy.studio.steps} current={step} />
+      {error && (
+        <GlassPanel className="border-[color:var(--li-warn)] p-4 text-sm text-[var(--li-warn)]">
+          {error.includes("providers") || error.includes("Ollama") || error.includes("503")
+            ? "Brain is offline or busy. Start Ollama and try again."
+            : error}
+        </GlassPanel>
+      )}
 
       {step === 0 && (
         <GlassPanel className="space-y-4 p-6">
@@ -92,15 +144,15 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
           <h2 className="font-display text-xl font-semibold">{copy.studio.steps[1]}</h2>
           <div className="space-y-3">
             {questions.slice(0, qIndex + 1).map((q, i) => (
-              <div key={q} className="space-y-2">
-                <PlainChatBubble role="assistant">{q}</PlainChatBubble>
+              <div key={q.questionKey} className="space-y-2">
+                <PlainChatBubble role="assistant">{q.content}</PlainChatBubble>
                 {answers[i] && (
                   <PlainChatBubble role="user">{answers[i]}</PlainChatBubble>
                 )}
               </div>
             ))}
           </div>
-          {qIndex < questions.length && (
+          {questions.length > 0 && qIndex < questions.length && (
             <div className="flex gap-2">
               <VapInput
                 value={answer}
@@ -110,13 +162,26 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
               <VapButton
                 variant="cyan"
                 disabled={!answer.trim()}
-                onClick={() => {
-                  const next = [...answers, answer.trim()];
-                  setAnswers(next);
-                  setAnswer("");
-                  logger.info("studio", "Answer saved", { index: qIndex });
-                  if (qIndex + 1 >= questions.length) goStep(2);
-                  else setQIndex(qIndex + 1);
+                onClick={async () => {
+                  const q = questions[qIndex];
+                  const text = answer.trim();
+                  setStatus(copy.statusThinking);
+                  try {
+                    await apiClient.answerDiscovery(q.questionKey, text);
+                    const next = [...answers, text];
+                    setAnswers(next);
+                    setAnswer("");
+                    if (qIndex + 1 >= questions.length) {
+                      await apiClient.finalizeDiscovery();
+                      goStep(2);
+                    } else {
+                      setQIndex(qIndex + 1);
+                    }
+                    setStatus(copy.statusReady);
+                  } catch (e) {
+                    setError(String(e));
+                    setStatus(copy.statusReady);
+                  }
                 }}
               >
                 {copy.studio.next}
@@ -134,35 +199,37 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setActivePath(p.id)}
+                onClick={() => setActivePath(p.kind)}
                 className={`rounded-full px-3 py-1 text-xs ${
-                  activePath === p.id
+                  activePath === p.kind
                     ? "bg-[var(--li-blue)] text-white"
                     : "border border-[var(--li-border)] bg-white/70 text-[var(--vap-muted)]"
                 }`}
               >
-                {p.id === "happy"
-                  ? copy.studio.paths.happy
-                  : p.id === "ambiguity"
-                    ? copy.studio.paths.ambiguity
-                    : copy.studio.paths.failure}
+                {p.title}
               </button>
             ))}
           </div>
-          <p className="text-sm text-[var(--vap-muted)]">
-            {paths.find((p) => p.id === activePath)?.summary}
-          </p>
+          <p className="text-sm text-[var(--vap-muted)]">{active?.summary}</p>
           <pre className="overflow-x-auto rounded-xl border border-[var(--li-border)] bg-[var(--li-surface)] p-4 font-mono text-xs text-[var(--li-blue-dark)]">
-            {pathCopy}
+            {active?.asciiFlow || ""}
           </pre>
           <div className="flex gap-2">
             <VapButton variant="ghost" onClick={() => goStep(1)}>
               {copy.studio.back}
             </VapButton>
             <VapButton
-              onClick={() => {
-                logger.info("studio", "Plan approved", { path: activePath });
-                goStep(3);
+              disabled={!paths.length}
+              onClick={async () => {
+                setStatus(copy.statusThinking);
+                try {
+                  await apiClient.approvePlan();
+                  goStep(3);
+                  setStatus(copy.statusReady);
+                } catch (e) {
+                  setError(String(e));
+                  setStatus(copy.statusReady);
+                }
               }}
             >
               {copy.studio.approve}
@@ -194,7 +261,9 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
             <VapButton variant="ghost" onClick={() => goStep(2)}>
               {copy.studio.back}
             </VapButton>
-            <VapButton onClick={() => goStep(4)}>{copy.studio.next}</VapButton>
+            <VapButton disabled={!roles.length} onClick={() => goStep(4)}>
+              {copy.studio.next}
+            </VapButton>
           </div>
         </GlassPanel>
       )}

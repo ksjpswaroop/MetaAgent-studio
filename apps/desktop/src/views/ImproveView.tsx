@@ -1,22 +1,48 @@
 import { useEffect, useState } from "react";
 import { copy } from "../copy/en";
-import { apiClient, EdgeItem, PromptItem } from "../lib/apiClient";
+import { apiClient, type EdgeItem, type PromptItem } from "../lib/apiClient";
 import { GlassPanel } from "../components/ui/GlassPanel";
 import { VapButton } from "../components/ui/VapButton";
 
-export function ImproveView() {
+type Props = {
+  setStatus: (s: string) => void;
+};
+
+export function ImproveView({ setStatus }: Props) {
   const [edges, setEdges] = useState<EdgeItem[]>([]);
   const [prompts, setPrompts] = useState<PromptItem[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    setError("");
+    try {
+      const [e, p] = await Promise.all([
+        apiClient.edgeCases(),
+        apiClient.codingPrompts(),
+      ]);
+      setEdges(e);
+      setPrompts(p);
+    } catch (err) {
+      setError(String(err));
+    }
+  }
 
   useEffect(() => {
-    apiClient.edgeCases().then(setEdges);
-    apiClient.codingPrompts().then(setPrompts);
+    void load();
   }, []);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h2 className="font-display text-2xl font-semibold">{copy.improve.title}</h2>
+      {error && (
+        <p className="text-sm text-[var(--li-warn)]">{error}</p>
+      )}
+      {notes && (
+        <p className="text-sm text-[var(--li-success)]">{notes}</p>
+      )}
 
       <GlassPanel className="space-y-3 p-6">
         <h3 className="font-display text-lg font-semibold">{copy.improve.edges}</h3>
@@ -56,7 +82,29 @@ export function ImproveView() {
             </VapButton>
           </div>
         ))}
-        <VapButton variant="cyan">{copy.improve.iterate}</VapButton>
+        <VapButton
+          variant="cyan"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setStatus(copy.statusThinking);
+            try {
+              const res = await apiClient.iterateImprove();
+              setNotes(
+                res.notes ||
+                  `Improved${res.scoreAfter != null ? ` — score ${Math.round(res.scoreAfter * 100)}` : ""}`,
+              );
+              await load();
+            } catch (err) {
+              setError(String(err));
+            } finally {
+              setBusy(false);
+              setStatus(copy.statusReady);
+            }
+          }}
+        >
+          {copy.improve.iterate}
+        </VapButton>
       </GlassPanel>
     </div>
   );
