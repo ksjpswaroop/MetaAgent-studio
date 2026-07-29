@@ -14,10 +14,10 @@ export function StepDots({ steps, current }: Props) {
             key={label}
             className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${
               active
-                ? "border-[var(--vap-cyan)] text-[var(--vap-cyan)] animate-[step-pulse_2s_ease-in-out_infinite]"
+                ? "border-[var(--li-blue)] text-[var(--li-blue)] animate-[step-pulse_2s_ease-in-out_infinite]"
                 : done
-                  ? "border-[var(--vap-magenta)]/50 text-[var(--vap-muted)]"
-                  : "border-[var(--glass-border)] text-[var(--vap-muted)]"
+                  ? "border-[var(--li-success)]/40 text-[var(--li-success)]"
+                  : "border-[var(--li-border)] text-[var(--vap-muted)]"
             }`}
           >
             <span className="font-display font-semibold">{i + 1}</span>

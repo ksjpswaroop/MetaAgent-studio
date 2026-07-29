@@ -14,15 +14,16 @@
     <style>
       .steps { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
       .step {
-        border: 1px solid var(--glass-border);
+        border: 1px solid var(--li-border);
         border-radius: 999px;
         padding: 0.35rem 0.75rem;
         font-size: 0.75rem;
-        color: var(--vap-muted);
+        color: var(--li-muted);
+        background: #fff;
       }
       .step.active {
-        border-color: var(--vap-cyan);
-        color: var(--vap-cyan);
+        border-color: var(--li-blue);
+        color: var(--li-blue);
       }
       .bubble {
         max-width: 85%;
@@ -32,12 +33,13 @@
         margin-bottom: 0.75rem;
       }
       .bubble.ai {
-        border: 1px solid var(--glass-border);
-        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--li-border);
+        background: #fff;
       }
       .bubble.me {
         margin-left: auto;
-        background: rgba(255, 43, 214, 0.8);
+        background: var(--li-blue);
+        color: #fff;
       }
       .path {
         display: inline-block;
@@ -46,13 +48,14 @@
         font-size: 0.75rem;
         margin: 0 0.25rem 0.5rem 0;
       }
-      .path.on { background: var(--vap-cyan); color: var(--vap-night); }
-      .path.off { border: 1px solid var(--glass-border); color: var(--vap-muted); }
+      .path.on { background: var(--li-blue); color: #fff; }
+      .path.off { border: 1px solid var(--li-border); color: var(--li-muted); background: #fff; }
       pre {
-        background: rgba(0, 0, 0, 0.35);
-        border-radius: 0.85rem;
+        background: var(--li-surface);
+        border: 1px solid var(--li-border);
+        border-radius: 0.75rem;
         padding: 1rem;
-        color: var(--vap-cyan);
+        color: var(--li-blue-dark);
         font-size: 0.75rem;
         overflow-x: auto;
       }
@@ -62,7 +65,7 @@
     <div class="shell">
       <aside class="nav">
         <p class="brand">MetaAgent Studio</p>
-        <p class="eyebrow">vapor studio</p>
+        <p class="eyebrow">agent studio</p>
         <a href="home.html">Start</a>
         <a class="active" href="studio.html">Build my agent</a>
         <a href="check.html">Make sure it works</a>

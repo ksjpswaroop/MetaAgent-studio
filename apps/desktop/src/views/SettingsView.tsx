@@ -33,7 +33,7 @@ export function SettingsView() {
         >
           {copy.settings.activate}
         </VapButton>
-        {licenseMsg && <p className="text-xs text-[var(--vap-cyan)]">{licenseMsg}</p>}
+        {licenseMsg && <p className="text-xs text-[var(--li-blue)]">{licenseMsg}</p>}
       </GlassPanel>
 
       <GlassPanel className="space-y-3 p-6">
@@ -46,8 +46,8 @@ export function SettingsView() {
               onClick={() => setBrain(b)}
               className={`rounded-full px-4 py-1.5 text-sm ${
                 brain === b
-                  ? "bg-[var(--vap-magenta)] text-white"
-                  : "border border-[var(--glass-border)] text-[var(--vap-muted)]"
+                  ? "bg-[var(--li-blue)] text-white"
+                  : "border border-[var(--li-border)] bg-white/80 text-[var(--vap-muted)]"
               }`}
             >
               {b === "local" ? copy.settings.local : copy.settings.cloud}
@@ -85,7 +85,7 @@ export function SettingsView() {
               {copy.settings.greet}
             </VapButton>
             {greetMsg && (
-              <p className="text-xs text-[var(--vap-cyan)]">{greetMsg}</p>
+              <p className="text-xs text-[var(--li-blue)]">{greetMsg}</p>
             )}
           </div>
         )}

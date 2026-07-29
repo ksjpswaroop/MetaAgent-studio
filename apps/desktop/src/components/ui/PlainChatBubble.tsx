@@ -10,8 +10,8 @@ export function PlainChatBubble({ role, children }: Props) {
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
           mine
-            ? "bg-[var(--vap-magenta)]/80 text-white"
-            : "border border-[var(--glass-border)] bg-black/30 text-[var(--vap-ink)]"
+            ? "bg-[var(--li-blue)] text-white"
+            : "border border-[var(--li-border)] bg-white text-[var(--vap-ink)]"
         }`}
       >
         {children}

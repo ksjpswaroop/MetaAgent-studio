@@ -1,6 +1,6 @@
 # MetaAgent Studio UI
 
-Vaporwave glass design system and prototype for non-technical users.
+LinkedIn-blue glass design system and prototype for non-technical users.
 
 ## Open the prototype
 
@@ -23,7 +23,7 @@ pnpm dev
 
 | Doc | Purpose |
 |-----|---------|
-| [01-vision-and-principles.md](01-vision-and-principles.md) | Non-tech + vaporwave glass rules |
+| [01-vision-and-principles.md](01-vision-and-principles.md) | Non-tech + LinkedIn-blue glass rules |
 | [02-flows-low-fidelity.md](02-flows-low-fidelity.md) | Lo-fi flows, menus, empty/error states |
 | [03-high-fidelity-spec.md](03-high-fidelity-spec.md) | Screens, copy, components, tokens |
 | [04-mockups.md](04-mockups.md) | Links to static HTML mockups |
@@ -35,8 +35,8 @@ Static mockups (no build): [mockups/](mockups/)
 
 | Token | Role |
 |-------|------|
-| Magenta / cyan / peach | Sunset vapor accents |
-| Glass fill + border | Frosted panels |
-| CRT scanlines | Subtle retro grain overlay |
+| LinkedIn blue / soft / dark | Primary, secondary, emphasis |
+| Cool surface `#EEF3F8` | App background |
+| Glass fill + blue-tint border | Frosted white panels |
 | Display font | Space Grotesk |
 | Body font | Outfit |

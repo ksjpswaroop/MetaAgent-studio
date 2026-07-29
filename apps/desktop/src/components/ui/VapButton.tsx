@@ -9,12 +9,12 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-[color:var(--vap-magenta)] text-white shadow-[0_4px_20px_rgba(255,43,214,0.3)] hover:brightness-110",
+    "bg-[color:var(--li-blue)] text-white shadow-[0_4px_16px_rgba(10,102,194,0.28)] hover:bg-[color:var(--li-blue-dark)]",
   cyan:
-    "bg-[color:var(--vap-cyan)] text-[color:var(--vap-night)] shadow-[0_4px_20px_rgba(45,226,230,0.28)] hover:brightness-105",
+    "bg-[color:var(--li-blue-soft)] text-white shadow-[0_4px_16px_rgba(55,143,233,0.25)] hover:bg-[color:var(--li-blue)]",
   ghost:
-    "bg-white/10 text-[color:var(--vap-ink)] border border-white/30 hover:bg-white/20",
-  danger: "bg-rose-600/90 text-white hover:brightness-110",
+    "bg-white/80 text-[color:var(--li-ink)] border border-[color:var(--li-border)] hover:bg-white hover:border-[color:var(--li-blue-soft)]",
+  danger: "bg-[#cc1016] text-white hover:brightness-110",
 };
 
 export function VapButton({

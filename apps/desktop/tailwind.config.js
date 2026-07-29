@@ -9,17 +9,25 @@ export default {
       },
       colors: {
         vap: {
-          magenta: "#ff2bd6",
-          cyan: "#2de2e6",
-          peach: "#ff9f7a",
-          night: "#12081f",
-          ink: "#f7f2ff",
+          magenta: "#0a66c2",
+          cyan: "#378fe9",
+          peach: "#915907",
+          night: "#eef3f8",
+          ink: "#191919",
+        },
+        li: {
+          blue: "#0a66c2",
+          dark: "#004182",
+          soft: "#378fe9",
+          sky: "#70b5f9",
+          surface: "#eef3f8",
+          ink: "#191919",
         },
       },
       keyframes: {
         "step-pulse": {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(45, 226, 230, 0.35)" },
-          "50%": { boxShadow: "0 0 0 8px rgba(45, 226, 230, 0)" },
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(10, 102, 194, 0.28)" },
+          "50%": { boxShadow: "0 0 0 8px rgba(10, 102, 194, 0)" },
         },
       },
     },

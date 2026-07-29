@@ -37,7 +37,7 @@ export function CheckView({ onImprove, onSave }: Props) {
         <ul className="space-y-2 text-sm">
           {rows.map((r) => (
             <li key={r.label} className="flex items-center gap-2">
-              <span className={r.ok ? "text-[var(--vap-cyan)]" : "text-[var(--vap-peach)]"}>
+              <span className={r.ok ? "text-[var(--li-success)]" : "text-[var(--li-warn)]"}>
                 {r.ok ? "●" : "○"}
               </span>
               {r.label}

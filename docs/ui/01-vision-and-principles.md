@@ -2,17 +2,17 @@
 
 ## Who it is for
 
-People who have an automation idea but do not want to speak “agent / schema / tier” language. The UI should feel like a friendly studio desk from a late-90s dream, not an engineer console.
+People who have an automation idea but do not want to speak “agent / schema / tier” language. The UI should feel like a clear professional studio, not an engineer console.
 
 ## Visual direction
 
-**Late-90s vaporwave + minimal glass**
+**LinkedIn-inspired blues + minimal glass**
 
-- Sunset mesh: magenta → cyan → peach
-- Frosted glass panels with thin chrome highlights
-- Soft CRT scanline grain (low opacity)
+- Primary blue `#0A66C2`, soft blue `#378FE9`, deep blue `#004182`
+- Cool light surface `#EEF3F8` with white frosted panels
+- Thin blue-tinted glass borders and soft blue shadows
 - Chunky, readable controls
-- Avoid: generic purple SaaS dashboards, dense data tables on first view, emoji sticker clutter
+- Avoid: generic purple SaaS dashboards, dense data tables on first view, neon glow spam
 
 ## Product principles
 
@@ -21,7 +21,7 @@ People who have an automation idea but do not want to speak “agent / schema / 
 3. **Plain words** — Smooth day / Missing pieces / When things break; Rules / Smart match / AI writer.
 4. **Progressive disclosure** — Advanced terms live under “Details for builders.”
 5. **Guided path** — Wizard over free-form graph editing (v1).
-6. **Motion with purpose** — Glass shimmer, step pulse, soft view wipe only.
+6. **Motion with purpose** — Soft brand shimmer, step pulse, soft view wipe only.
 
 ## Anti-patterns
 

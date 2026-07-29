@@ -4,28 +4,29 @@
 
 | Name | Value (approx) | Use |
 |------|----------------|-----|
-| `--vap-magenta` | `#ff2bd6` | Accents, active nav |
-| `--vap-cyan` | `#2de2e6` | Secondary accent, links |
-| `--vap-peach` | `#ff9f7a` | Warm highlight |
-| `--vap-night` | `#12081f` | Deep base under mesh |
-| `--glass-bg` | `rgba(255,255,255,0.08)` | Panel fill |
-| `--glass-border` | `rgba(255,255,255,0.22)` | Panel edge |
-| `--glass-blur` | `16px` | Backdrop blur |
+| `--li-blue` | `#0A66C2` | Primary CTA, active nav, brand |
+| `--li-blue-soft` | `#378FE9` | Secondary CTA / accents |
+| `--li-blue-dark` | `#004182` | Hover / emphasis |
+| `--li-success` | `#057642` | Pass states |
+| `--li-surface` | `#EEF3F8` | App background |
+| `--li-ink` | `#191919` | Body text |
+| `--glass-bg` | `rgba(255,255,255,0.72)` | Panel fill |
+| `--glass-border` | `rgba(10,102,194,0.16)` | Panel edge |
+| `--glass-blur` | `14px` | Backdrop blur |
 | Display | Space Grotesk | Titles / brand |
 | Body | Outfit | UI copy |
 
 ## Shell
 
-- Left rail (~200px): brand mark top, nav items with soft active glass pill
-- Main: frosted content well
+- Left rail (~200px): blue brand mark, white glass nav; active item solid LinkedIn blue
+- Main: frosted white content well on cool blue-gray mesh
 - Status pill top-right: Ready / Thinking…
-- CRT overlay pseudo-element on `body::after`, pointer-events none
 
 ## Screens
 
 ### Home
 
-- Full-bleed sunset mesh; brand wordmark large
+- Full-bleed cool blue mesh; brand wordmark large in blue gradient
 - One headline: “Turn an idea into a working helper”
 - One supporting line
 - Large idea textarea + primary CTA “Start building”

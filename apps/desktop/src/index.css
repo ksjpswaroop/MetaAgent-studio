@@ -15,7 +15,7 @@ body {
   color: var(--vap-ink);
   font-family: var(--font-body);
   user-select: none;
-  background: var(--vap-night);
+  background: var(--li-surface);
   overflow-x: hidden;
 }
 
@@ -25,10 +25,10 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(255, 43, 214, 0.45), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 80% 30%, rgba(45, 226, 230, 0.35), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 50% 90%, rgba(255, 159, 122, 0.35), transparent 55%),
-    linear-gradient(160deg, #1a0b2e 0%, #12081f 45%, #0b1c2c 100%);
+    radial-gradient(ellipse 70% 50% at 10% 0%, rgba(10, 102, 194, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 10%, rgba(55, 143, 233, 0.16), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(112, 181, 249, 0.2), transparent 55%),
+    linear-gradient(165deg, #eef3f8 0%, #e4edf6 48%, #dce8f4 100%);
 }
 
 body::after {
@@ -40,10 +40,10 @@ body::after {
   opacity: var(--crt-opacity);
   background: repeating-linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.15) 0px,
-    rgba(255, 255, 255, 0.15) 1px,
+    rgba(10, 102, 194, 0.12) 0px,
+    rgba(10, 102, 194, 0.12) 1px,
     transparent 2px,
-    transparent 4px
+    transparent 5px
   );
 }
 
@@ -59,10 +59,10 @@ body::after {
 @keyframes step-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(45, 226, 230, 0.35);
+    box-shadow: 0 0 0 0 rgba(10, 102, 194, 0.28);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(45, 226, 230, 0);
+    box-shadow: 0 0 0 8px rgba(10, 102, 194, 0);
   }
 }
 

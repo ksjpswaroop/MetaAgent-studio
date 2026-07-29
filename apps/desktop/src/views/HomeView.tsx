@@ -13,7 +13,7 @@ export function HomeView({ onStart }: Props) {
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-3xl flex-col justify-center">
       <p className="font-display text-5xl font-bold tracking-tight md:text-6xl">
-        <span className="bg-gradient-to-r from-[var(--vap-peach)] via-[var(--vap-magenta)] to-[var(--vap-cyan)] bg-clip-text text-transparent glass-shimmer">
+        <span className="bg-gradient-to-r from-[var(--li-blue-dark)] via-[var(--li-blue)] to-[var(--li-blue-soft)] bg-clip-text text-transparent glass-shimmer">
           {copy.brand}
         </span>
       </p>
@@ -34,7 +34,7 @@ export function HomeView({ onStart }: Props) {
               key={ex}
               type="button"
               onClick={() => setIdea(ex)}
-              className="rounded-full border border-[var(--glass-border)] bg-black/20 px-3 py-1 text-xs text-[var(--vap-muted)] hover:border-[var(--vap-cyan)] hover:text-[var(--vap-cyan)]"
+              className="rounded-full border border-[var(--li-border)] bg-white/80 px-3 py-1 text-xs text-[var(--vap-muted)] hover:border-[var(--li-blue)] hover:text-[var(--li-blue)]"
             >
               {ex}
             </button>

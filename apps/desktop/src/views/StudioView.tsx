@@ -120,8 +120,8 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
                 onClick={() => setActivePath(p.id)}
                 className={`rounded-full px-3 py-1 text-xs ${
                   activePath === p.id
-                    ? "bg-[var(--vap-cyan)] text-[var(--vap-night)]"
-                    : "border border-[var(--glass-border)] text-[var(--vap-muted)]"
+                    ? "bg-[var(--li-blue)] text-white"
+                    : "border border-[var(--li-border)] bg-white/70 text-[var(--vap-muted)]"
                 }`}
               >
                 {p.id === "happy"
@@ -135,7 +135,7 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
           <p className="text-sm text-[var(--vap-muted)]">
             {paths.find((p) => p.id === activePath)?.summary}
           </p>
-          <pre className="overflow-x-auto rounded-xl bg-black/35 p-4 font-mono text-xs text-[var(--vap-cyan)]">
+          <pre className="overflow-x-auto rounded-xl border border-[var(--li-border)] bg-[var(--li-surface)] p-4 font-mono text-xs text-[var(--li-blue-dark)]">
             {pathCopy}
           </pre>
           <div className="flex gap-2">
@@ -154,11 +154,11 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
             {roles.map((r) => (
               <li
                 key={r.name}
-                className="rounded-xl border border-[var(--glass-border)] bg-black/20 px-4 py-3"
+                className="rounded-xl border border-[var(--li-border)] bg-white/80 px-4 py-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-display font-semibold">{r.name}</p>
-                  <span className="text-xs text-[var(--vap-peach)]">{r.tierLabel}</span>
+                  <span className="text-xs font-medium text-[var(--li-blue)]">{r.tierLabel}</span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--vap-muted)]">{r.blurb}</p>
               </li>
