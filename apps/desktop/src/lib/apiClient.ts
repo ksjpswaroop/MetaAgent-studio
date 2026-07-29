@@ -105,9 +105,17 @@ function loadSession(): SessionDraft | null {
   return storageGet<SessionDraft | null>("session", null);
 }
 
-async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const method = init?.method ?? "GET";
-  logger.debug("http", `${method} ${path}`);
+function isTransientNetworkError(err: unknown): boolean {
+  const msg = String(err);
+  return (
+    msg.includes("Load failed") ||
+    msg.includes("Failed to fetch") ||
+    msg.includes("NetworkError") ||
+    msg.includes("network connection was lost")
+  );
+}
+
+async function httpOnce<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeoutMs = 180_000;
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -125,21 +133,46 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
       } catch {
         /* ignore */
       }
-      logger.error("http", detail);
       throw new Error(detail);
     }
     if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
   } catch (err) {
-    const msg =
-      err instanceof DOMException && err.name === "AbortError"
-        ? `Request timed out after ${timeoutMs / 1000}s: ${path}`
-        : String(err);
-    logger.error("http", `Request failed ${path}`, { error: msg });
-    throw new Error(msg);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s: ${path}`);
+    }
+    throw err instanceof Error ? err : new Error(String(err));
   } finally {
     window.clearTimeout(timer);
   }
+}
+
+async function http<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = init?.method ?? "GET";
+  logger.debug("http", `${method} ${path}`);
+  const attempts = 3;
+  let lastErr: Error | null = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await httpOnce<T>(path, init);
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      if (!isTransientNetworkError(err) || i === attempts - 1) {
+        logger.error("http", `Request failed ${path}`, { error: String(lastErr) });
+        throw new Error(
+          isTransientNetworkError(err)
+            ? `Couldn't reach the studio API (${path}). Is it still running?`
+            : lastErr.message,
+        );
+      }
+      logger.warn("http", `Retry ${i + 1}/${attempts - 1} after network blip`, {
+        path,
+        error: String(err),
+      });
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastErr ?? new Error(`Request failed ${path}`);
 }
 
 export const apiClient = {
