@@ -1,0 +1,20 @@
+[package]
+name = "metaagent-studio-desktop"
+version = "0.1.0"
+description = "MetaAgent Studio Desktop Starter"
+authors = ["Swaroop"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.1", features = ["image-png"] }
+tauri-plugin-opener = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.40", features = ["full"] }
+
+[lib]
+name = "metaagent_studio_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]

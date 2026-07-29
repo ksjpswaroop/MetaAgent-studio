@@ -1,0 +1,21 @@
+# Node / Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+dist-isolate/
+build/
+
+# Rust / Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# macOS
+.DS_Store
+
+# IDE / Logs
+.vscode/
+.idea/
+*.log
