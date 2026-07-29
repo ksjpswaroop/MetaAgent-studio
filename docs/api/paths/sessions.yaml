@@ -1,0 +1,90 @@
+paths:
+  /api/v1/sessions:
+    get:
+      tags: [sessions]
+      summary: List sessions
+      operationId: listSessions
+      parameters:
+        - name: project_id
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ../components/schemas.yaml#/components/schemas/StudioSession
+    post:
+      tags: [sessions]
+      summary: Create session
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/SessionCreate
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/StudioSession
+  /api/v1/sessions/{session_id}:
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [sessions]
+      summary: Get session
+      operationId: getSession
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/StudioSession
+    patch:
+      tags: [sessions]
+      summary: Patch session state snapshot
+      operationId: patchSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/StudioSession
+  /api/v1/sessions/{session_id}/events:
+    get:
+      tags: [sessions]
+      summary: List session events
+      operationId: listSessionEvents
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ../components/schemas.yaml#/components/schemas/SessionEvent

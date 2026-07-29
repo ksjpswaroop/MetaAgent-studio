@@ -1,0 +1,29 @@
+paths:
+  /api/v1/edge-cases/{session_id}/generate:
+    post:
+      tags: [edge-cases]
+      summary: Generate edge cases via LLM
+      operationId: generateEdgeCases
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Edge cases }
+  /api/v1/edge-cases/{session_id}:
+    get:
+      tags: [edge-cases]
+      summary: List edge cases
+      operationId: listEdgeCases
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Edge cases }
+  /api/v1/edge-cases/{session_id}/{case_id}/attach-to-flows:
+    post:
+      tags: [edge-cases]
+      summary: Attach edge case to failure scenario
+      operationId: attachEdgeCase
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+        - { name: case_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Updated edge case }

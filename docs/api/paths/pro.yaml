@@ -1,0 +1,34 @@
+paths:
+  /api/v1/teams:
+    get:
+      tags: [pro]
+      summary: Team collaboration stub (Pro)
+      operationId: listTeams
+      x-maturity: future
+      responses:
+        '200':
+          description: Stub payload when licensed
+        '402':
+          description: Pro license required
+  /api/v1/deploy:
+    post:
+      tags: [pro]
+      summary: One-click deploy stub (Pro)
+      operationId: createDeploy
+      x-maturity: future
+      responses:
+        '200':
+          description: Stub payload when licensed
+        '402':
+          description: Pro license required
+  /api/v1/audits:
+    get:
+      tags: [pro]
+      summary: Security audit stub (Pro)
+      operationId: listAudits
+      x-maturity: future
+      responses:
+        '200':
+          description: Stub payload when licensed
+        '402':
+          description: Pro license required

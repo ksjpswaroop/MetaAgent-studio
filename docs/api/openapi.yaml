@@ -1,0 +1,168 @@
+openapi: 3.1.0
+info:
+  title: MetaAgent Studio Local API
+  version: 0.1.0
+  description: |
+    Local-first FastAPI core for the MetaAgent Studio desktop/CLI app.
+    Single-user. No authentication. License key unlocks Pro stubs.
+  license:
+    name: Apache-2.0
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local Studio API
+tags:
+  - name: health
+  - name: license
+  - name: projects
+  - name: sessions
+  - name: discovery
+  - name: flows
+  - name: allocation
+  - name: architecture
+  - name: gates
+  - name: scaffold
+  - name: artifacts
+  - name: providers
+  - name: settings
+  - name: events
+  - name: edge-cases
+  - name: simulate
+  - name: prompts
+  - name: package
+  - name: improve
+  - name: pro
+    description: Future Pro routers (require active license)
+paths:
+  /health:
+    $ref: ./paths/health.yaml#/paths/~1health
+  /api/v1/license:
+    $ref: ./paths/license.yaml#/paths/~1api~1v1~1license
+  /api/v1/license/activate:
+    $ref: ./paths/license.yaml#/paths/~1api~1v1~1license~1activate
+  /api/v1/license/deactivate:
+    $ref: ./paths/license.yaml#/paths/~1api~1v1~1license~1deactivate
+  /api/v1/license/validate:
+    $ref: ./paths/license.yaml#/paths/~1api~1v1~1license~1validate
+  /api/v1/projects:
+    $ref: ./paths/projects.yaml#/paths/~1api~1v1~1projects
+  /api/v1/projects/{project_id}:
+    $ref: ./paths/projects.yaml#/paths/~1api~1v1~1projects~1{project_id}
+  /api/v1/sessions:
+    $ref: ./paths/sessions.yaml#/paths/~1api~1v1~1sessions
+  /api/v1/sessions/{session_id}:
+    $ref: ./paths/sessions.yaml#/paths/~1api~1v1~1sessions~1{session_id}
+  /api/v1/sessions/{session_id}/events:
+    $ref: ./paths/sessions.yaml#/paths/~1api~1v1~1sessions~1{session_id}~1events
+  /api/v1/discovery/{session_id}/start:
+    $ref: ./paths/discovery.yaml#/paths/~1api~1v1~1discovery~1{session_id}~1start
+  /api/v1/discovery/{session_id}/answer:
+    $ref: ./paths/discovery.yaml#/paths/~1api~1v1~1discovery~1{session_id}~1answer
+  /api/v1/discovery/{session_id}/messages:
+    $ref: ./paths/discovery.yaml#/paths/~1api~1v1~1discovery~1{session_id}~1messages
+  /api/v1/discovery/{session_id}/finalize:
+    $ref: ./paths/discovery.yaml#/paths/~1api~1v1~1discovery~1{session_id}~1finalize
+  /api/v1/discovery/{session_id}/scope:
+    $ref: ./paths/discovery.yaml#/paths/~1api~1v1~1discovery~1{session_id}~1scope
+  /api/v1/flows/{session_id}/generate:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}~1generate
+  /api/v1/flows/{session_id}:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}
+  /api/v1/flows/{session_id}/modify:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}~1modify
+  /api/v1/flows/{session_id}/add-fallback:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}~1add-fallback
+  /api/v1/flows/{session_id}/re-route:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}~1re-route
+  /api/v1/flows/{session_id}/approve:
+    $ref: ./paths/flows.yaml#/paths/~1api~1v1~1flows~1{session_id}~1approve
+  /api/v1/allocation/{session_id}/run:
+    $ref: ./paths/allocation.yaml#/paths/~1api~1v1~1allocation~1{session_id}~1run
+  /api/v1/allocation/{session_id}:
+    $ref: ./paths/allocation.yaml#/paths/~1api~1v1~1allocation~1{session_id}
+  /api/v1/allocation/{session_id}/steps/{step_id}:
+    $ref: ./paths/allocation.yaml#/paths/~1api~1v1~1allocation~1{session_id}~1steps~1{step_id}
+  /api/v1/allocation/{session_id}/recompute:
+    $ref: ./paths/allocation.yaml#/paths/~1api~1v1~1allocation~1{session_id}~1recompute
+  /api/v1/architecture/{session_id}/build:
+    $ref: ./paths/architecture.yaml#/paths/~1api~1v1~1architecture~1{session_id}~1build
+  /api/v1/architecture/{session_id}:
+    $ref: ./paths/architecture.yaml#/paths/~1api~1v1~1architecture~1{session_id}
+  /api/v1/architecture/{session_id}/agents:
+    $ref: ./paths/architecture.yaml#/paths/~1api~1v1~1architecture~1{session_id}~1agents
+  /api/v1/architecture/{session_id}/tools:
+    $ref: ./paths/architecture.yaml#/paths/~1api~1v1~1architecture~1{session_id}~1tools
+  /api/v1/architecture/{session_id}/state-schema:
+    $ref: ./paths/architecture.yaml#/paths/~1api~1v1~1architecture~1{session_id}~1state-schema
+  /api/v1/gates/{session_id}:
+    $ref: ./paths/gates.yaml#/paths/~1api~1v1~1gates~1{session_id}
+  /api/v1/gates/{session_id}/configs/{gate_id}:
+    $ref: ./paths/gates.yaml#/paths/~1api~1v1~1gates~1{session_id}~1configs~1{gate_id}
+  /api/v1/gates/{session_id}/dry-run:
+    $ref: ./paths/gates.yaml#/paths/~1api~1v1~1gates~1{session_id}~1dry-run
+  /api/v1/gates/{session_id}/runs:
+    $ref: ./paths/gates.yaml#/paths/~1api~1v1~1gates~1{session_id}~1runs
+  /api/v1/scaffold/{session_id}/run:
+    $ref: ./paths/scaffold.yaml#/paths/~1api~1v1~1scaffold~1{session_id}~1run
+  /api/v1/scaffold/{session_id}/jobs:
+    $ref: ./paths/scaffold.yaml#/paths/~1api~1v1~1scaffold~1{session_id}~1jobs
+  /api/v1/scaffold/jobs/{job_id}:
+    $ref: ./paths/scaffold.yaml#/paths/~1api~1v1~1scaffold~1jobs~1{job_id}
+  /api/v1/artifacts:
+    $ref: ./paths/artifacts.yaml#/paths/~1api~1v1~1artifacts
+  /api/v1/artifacts/{artifact_id}:
+    $ref: ./paths/artifacts.yaml#/paths/~1api~1v1~1artifacts~1{artifact_id}
+  /api/v1/artifacts/jobs/{job_id}/download:
+    $ref: ./paths/artifacts.yaml#/paths/~1api~1v1~1artifacts~1jobs~1{job_id}~1download
+  /api/v1/providers:
+    $ref: ./paths/providers.yaml#/paths/~1api~1v1~1providers
+  /api/v1/providers/{provider_id}:
+    $ref: ./paths/providers.yaml#/paths/~1api~1v1~1providers~1{provider_id}
+  /api/v1/providers/{provider_id}/test:
+    $ref: ./paths/providers.yaml#/paths/~1api~1v1~1providers~1{provider_id}~1test
+  /api/v1/providers/order:
+    $ref: ./paths/providers.yaml#/paths/~1api~1v1~1providers~1order
+  /api/v1/settings:
+    $ref: ./paths/settings.yaml#/paths/~1api~1v1~1settings
+  /api/v1/events/{session_id}/stream:
+    $ref: ./paths/events.yaml#/paths/~1api~1v1~1events~1{session_id}~1stream
+  /api/v1/teams:
+    $ref: ./paths/pro.yaml#/paths/~1api~1v1~1teams
+  /api/v1/deploy:
+    $ref: ./paths/pro.yaml#/paths/~1api~1v1~1deploy
+  /api/v1/audits:
+    $ref: ./paths/pro.yaml#/paths/~1api~1v1~1audits
+  /api/v1/edge-cases/{session_id}/generate:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}~1generate
+  /api/v1/edge-cases/{session_id}:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}
+  /api/v1/edge-cases/{session_id}/{case_id}/attach-to-flows:
+    $ref: ./paths/edge_cases.yaml#/paths/~1api~1v1~1edge-cases~1{session_id}~1{case_id}~1attach-to-flows
+  /api/v1/simulate/{session_id}/run:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1{session_id}~1run
+  /api/v1/simulate/{session_id}/runs:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1{session_id}~1runs
+  /api/v1/simulate/runs/{run_id}:
+    $ref: ./paths/simulate.yaml#/paths/~1api~1v1~1simulate~1runs~1{run_id}
+  /api/v1/prompts/{session_id}/generate:
+    $ref: ./paths/prompts.yaml#/paths/~1api~1v1~1prompts~1{session_id}~1generate
+  /api/v1/prompts/{session_id}:
+    $ref: ./paths/prompts.yaml#/paths/~1api~1v1~1prompts~1{session_id}
+  /api/v1/package/{session_id}/build:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1build
+  /api/v1/package/{session_id}/verify:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1verify
+  /api/v1/package/{session_id}/packages:
+    $ref: ./paths/package.yaml#/paths/~1api~1v1~1package~1{session_id}~1packages
+  /api/v1/improve/{session_id}/iterate:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1iterate
+  /api/v1/improve/{session_id}/history:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1history
+  /api/v1/improve/{session_id}/publish-local:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1improve~1{session_id}~1publish-local
+  /api/v1/packs:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs
+  /api/v1/packs/{pack_id}/fork:
+    $ref: ./paths/improve.yaml#/paths/~1api~1v1~1packs~1{pack_id}~1fork
+components:
+  schemas:
+    $ref: ./components/schemas.yaml#/components/schemas

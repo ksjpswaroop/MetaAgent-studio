@@ -1,0 +1,104 @@
+{
+  "agent_state_schema": {
+    "title": "AgentState",
+    "type": "object",
+    "properties": {
+      "input_payload": {
+        "type": "object"
+      },
+      "retrieved_context": {
+        "type": "array"
+      },
+      "draft": {
+        "type": "string"
+      },
+      "errors": {
+        "type": "array"
+      }
+    }
+  },
+  "graph_topology": {
+    "nodes": [
+      "validate",
+      "retrieve",
+      "reason",
+      "emit"
+    ],
+    "edges": [
+      [
+        "validate",
+        "retrieve"
+      ],
+      [
+        "retrieve",
+        "reason"
+      ],
+      [
+        "reason",
+        "emit"
+      ]
+    ]
+  },
+  "model_notes": "LLM-generated architecture",
+  "agents": [
+    {
+      "name": "RequirementsValidator",
+      "role": "Tier 1 validation",
+      "system_prompt": "Validate inputs; output JSON only. Strip markdown fences.",
+      "tools": [
+        "validate_schema"
+      ],
+      "model_recommendation": "n/a-code"
+    },
+    {
+      "name": "RetrievalSpecialist",
+      "role": "Tier 2 retrieval",
+      "system_prompt": "Rank context snippets.",
+      "tools": [
+        "search_kb"
+      ],
+      "model_recommendation": "embeddings"
+    },
+    {
+      "name": "DraftSynthesizer",
+      "role": "Tier 3 synthesis",
+      "system_prompt": "Draft responses from context.",
+      "tools": [
+        "emit_message"
+      ],
+      "model_recommendation": "qwen2.5-coder:7b"
+    }
+  ],
+  "tools": [
+    {
+      "name": "validate_schema",
+      "description": "Validate payload",
+      "is_side_effecting": false,
+      "side_effect_class": "read_only",
+      "parameters": {
+        "schema": "AgentState"
+      },
+      "timeout_seconds": 30
+    },
+    {
+      "name": "search_kb",
+      "description": "Vector search",
+      "is_side_effecting": false,
+      "side_effect_class": "read_only",
+      "parameters": {
+        "top_k": 5
+      },
+      "timeout_seconds": 30
+    },
+    {
+      "name": "emit_message",
+      "description": "Send outbound message",
+      "is_side_effecting": true,
+      "side_effect_class": "side_effecting",
+      "parameters": {
+        "channel": "email"
+      },
+      "timeout_seconds": 30
+    }
+  ]
+}

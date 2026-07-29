@@ -1,0 +1,26 @@
+paths:
+  /api/v1/settings:
+    get:
+      tags: [settings]
+      summary: Get all settings
+      operationId: getSettings
+      responses:
+        '200':
+          description: Settings map
+          content:
+            application/json:
+              schema:
+                $ref: ../components/schemas.yaml#/components/schemas/SettingsMap
+    put:
+      tags: [settings]
+      summary: Upsert settings
+      operationId: putSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/SettingsMap
+      responses:
+        '200':
+          description: Updated settings

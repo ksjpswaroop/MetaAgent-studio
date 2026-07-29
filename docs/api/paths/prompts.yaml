@@ -1,0 +1,19 @@
+paths:
+  /api/v1/prompts/{session_id}/generate:
+    post:
+      tags: [prompts]
+      summary: Generate coding-gap prompts
+      operationId: generatePrompts
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Prompts }
+  /api/v1/prompts/{session_id}:
+    get:
+      tags: [prompts]
+      summary: List coding-gap prompts
+      operationId: listPrompts
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Prompts }

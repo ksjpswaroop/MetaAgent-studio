@@ -1,0 +1,55 @@
+paths:
+  /api/v1/architecture/{session_id}/build:
+    post:
+      tags: [architecture]
+      summary: Build architecture blueprint
+      operationId: buildArchitecture
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Blueprint
+        '409':
+          description: Allocations missing
+  /api/v1/architecture/{session_id}:
+    get:
+      tags: [architecture]
+      summary: Get blueprint
+      operationId: getArchitecture
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Blueprint
+        '404':
+          description: Not built
+  /api/v1/architecture/{session_id}/agents:
+    get:
+      tags: [architecture]
+      summary: List agent specs
+      operationId: listAgents
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Agents
+  /api/v1/architecture/{session_id}/tools:
+    get:
+      tags: [architecture]
+      summary: List tool specs
+      operationId: listTools
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Tools
+  /api/v1/architecture/{session_id}/state-schema:
+    get:
+      tags: [architecture]
+      summary: Preview AgentState schema JSON
+      operationId: getStateSchema
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Schema object

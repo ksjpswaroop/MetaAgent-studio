@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import __version__
+from app.db.session import get_db
+from app.models.schemas import HealthResponse
+
+router = APIRouter(tags=["health"])
+
+
+@router.get("/health", response_model=HealthResponse)
+async def health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
+    db_ok = False
+    try:
+        await db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+    return HealthResponse(
+        status="ok" if db_ok else "error",
+        version=__version__,
+        db_ok=db_ok,
+        providers_reachable=False,
+    )

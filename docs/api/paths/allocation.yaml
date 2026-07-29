@@ -1,0 +1,50 @@
+paths:
+  /api/v1/allocation/{session_id}/run:
+    post:
+      tags: [allocation]
+      summary: Run 3-tier allocator
+      operationId: runAllocation
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Allocations
+        '409':
+          description: Flow not approved
+  /api/v1/allocation/{session_id}:
+    get:
+      tags: [allocation]
+      summary: Get allocations
+      operationId: getAllocation
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Allocations
+  /api/v1/allocation/{session_id}/steps/{step_id}:
+    patch:
+      tags: [allocation]
+      summary: Override step tier
+      operationId: overrideAllocation
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+        - { name: step_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/AllocationOverride
+      responses:
+        '200':
+          description: Updated allocation
+  /api/v1/allocation/{session_id}/recompute:
+    post:
+      tags: [allocation]
+      summary: Recompute allocations
+      operationId: recomputeAllocation
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Allocations

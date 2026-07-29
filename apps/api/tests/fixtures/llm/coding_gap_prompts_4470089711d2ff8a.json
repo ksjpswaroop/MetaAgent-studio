@@ -1,0 +1,15 @@
+{
+  "prompts": [
+    {
+      "title": "Handle KB timeout in retrieval node",
+      "gap_description": "Simulation failed on Search Knowledge Base timeout",
+      "files": [
+        "tools/search_kb.py",
+        "graph.py",
+        "gates/pre_tool.py"
+      ],
+      "acceptance_criteria": "Timeouts raise typed error and route to fallback node; pytest covers timeout fixture",
+      "prompt_text": "You are implementing a LangGraph retrieval node. Add timeout handling with fallback routing. Files: tools/search_kb.py, graph.py. Acceptance: pytest for timeout fixture passes."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "project_name": "Generated Project",
+  "primary_goal": "{\"prompt\": \"Ingest invoice PDFs via webhook, extract line items, score fraud risk, and post to accounting API.\", \"transcript\": [{\"role\": \"assistant\", \"question_key\": null, \"content\": \"Let's clarify sc",
+  "trigger_type": "webhook",
+  "external_tools": [
+    "http_api"
+  ],
+  "human_in_loop": true,
+  "fallback_strategy": "queue and retry"
+}

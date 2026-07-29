@@ -1,0 +1,36 @@
+paths:
+  /api/v1/artifacts:
+    get:
+      tags: [artifacts]
+      summary: List artifacts
+      operationId: listArtifacts
+      parameters:
+        - name: project_id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Artifacts
+  /api/v1/artifacts/{artifact_id}:
+    get:
+      tags: [artifacts]
+      summary: Get artifact
+      operationId: getArtifact
+      parameters:
+        - { name: artifact_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Artifact
+        '404':
+          description: Not found
+  /api/v1/artifacts/jobs/{job_id}/download:
+    get:
+      tags: [artifacts]
+      summary: Download job artifacts (zip or manifest)
+      operationId: downloadArtifacts
+      parameters:
+        - { name: job_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Zip or JSON manifest

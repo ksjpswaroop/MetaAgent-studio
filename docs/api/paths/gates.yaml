@@ -1,0 +1,51 @@
+paths:
+  /api/v1/gates/{session_id}:
+    get:
+      tags: [gates]
+      summary: List gate configs
+      operationId: listGates
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Gate configs
+  /api/v1/gates/{session_id}/configs/{gate_id}:
+    patch:
+      tags: [gates]
+      summary: Update gate config
+      operationId: updateGate
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+        - { name: gate_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                config: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated gate
+  /api/v1/gates/{session_id}/dry-run:
+    post:
+      tags: [gates]
+      summary: Dry-run verification gates
+      operationId: dryRunGates
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Gate runs
+  /api/v1/gates/{session_id}/runs:
+    get:
+      tags: [gates]
+      summary: List gate runs
+      operationId: listGateRuns
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Runs

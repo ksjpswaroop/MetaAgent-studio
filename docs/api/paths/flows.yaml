@@ -1,0 +1,69 @@
+paths:
+  /api/v1/flows/{session_id}/generate:
+    post:
+      tags: [flows]
+      summary: Generate execution scenarios
+      operationId: generateFlows
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Scenarios
+        '409':
+          description: Scope not ready
+  /api/v1/flows/{session_id}:
+    get:
+      tags: [flows]
+      summary: Get scenarios
+      operationId: getFlows
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Scenarios
+  /api/v1/flows/{session_id}/modify:
+    post:
+      tags: [flows]
+      summary: Modify step N
+      operationId: modifyFlow
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/components/schemas/FlowModifyRequest
+      responses:
+        '200':
+          description: Updated scenarios
+  /api/v1/flows/{session_id}/add-fallback:
+    post:
+      tags: [flows]
+      summary: Add fallback node
+      operationId: addFallback
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Updated scenarios
+  /api/v1/flows/{session_id}/re-route:
+    post:
+      tags: [flows]
+      summary: Re-route flow edges
+      operationId: reRouteFlow
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Updated scenarios
+  /api/v1/flows/{session_id}/approve:
+    post:
+      tags: [flows]
+      summary: Approve and freeze topology
+      operationId: approveFlow
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Approved

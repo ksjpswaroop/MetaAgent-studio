@@ -1,0 +1,28 @@
+paths:
+  /api/v1/package/{session_id}/build:
+    post:
+      tags: [package]
+      summary: Build local package tree zip checksums
+      operationId: buildPackage
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Package }
+  /api/v1/package/{session_id}/verify:
+    post:
+      tags: [package]
+      summary: Verify package with pytest sandbox
+      operationId: verifyPackage
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Package }
+  /api/v1/package/{session_id}/packages:
+    get:
+      tags: [package]
+      summary: List packages
+      operationId: listPackages
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Packages }
