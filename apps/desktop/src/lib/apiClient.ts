@@ -29,6 +29,7 @@ export type PromptItem = { id: string; title: string; prompt: string };
 export type KitItem = { id: string; name: string; score: number };
 
 export type ConnectorKind =
+  | "hermes"
   | "gmail"
   | "slack"
   | "notion"
@@ -61,6 +62,14 @@ const mode = (import.meta.env.VITE_API_MODE as string) || "mock";
 const base = (import.meta.env.VITE_API_BASE as string) || "http://127.0.0.1:8000";
 
 const defaultConnectors: ConnectorItem[] = [
+  {
+    id: "conn_hermes",
+    kind: "hermes",
+    name: "Hermes Agent",
+    description: "Run and hand off work to a Hermes agent",
+    connected: false,
+    baseUrl: "http://127.0.0.1:8787",
+  },
   {
     id: "conn_gmail",
     kind: "gmail",
@@ -126,11 +135,24 @@ const memory = {
   mcp: null as McpServerItem[] | null,
 };
 
+function mergeDefaultConnectors(stored: ConnectorItem[]): ConnectorItem[] {
+  const byId = new Map(stored.map((c) => [c.id, c]));
+  const merged: ConnectorItem[] = [];
+  for (const def of defaultConnectors) {
+    merged.push(byId.get(def.id) ?? def);
+    byId.delete(def.id);
+  }
+  for (const extra of byId.values()) merged.push(extra);
+  return merged;
+}
+
 function loadConnectors(): ConnectorItem[] {
   if (memory.connectors) return memory.connectors;
   try {
     const raw = localStorage.getItem("mas_connectors");
-    memory.connectors = raw ? (JSON.parse(raw) as ConnectorItem[]) : [...defaultConnectors];
+    memory.connectors = raw
+      ? mergeDefaultConnectors(JSON.parse(raw) as ConnectorItem[])
+      : [...defaultConnectors];
   } catch {
     memory.connectors = [...defaultConnectors];
   }

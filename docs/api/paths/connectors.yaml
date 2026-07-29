@@ -22,7 +22,7 @@ paths:
                 name: { type: string }
                 kind:
                   type: string
-                  enum: [gmail, slack, notion, sheets, webhook, custom]
+                  enum: [hermes, gmail, slack, notion, sheets, webhook, custom]
                 base_url: { type: string }
       responses:
         "201":

@@ -6,7 +6,7 @@ Helpers need external apps (email, chat, sheets) and optional MCP tool servers. 
 
 ## User stories
 
-- As a builder, I connect Gmail / Slack / Notion / Sheets / a webhook so my kit can use them.
+- As a builder, I connect Hermes Agent / Gmail / Slack / Notion / Sheets / a webhook so my kit can use them.
 - As an advanced user, I add MCP servers (stdio, SSE, or HTTP) and turn them on/off.
 - As a cautious user, I can test a connection before relying on it.
 

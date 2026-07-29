@@ -61,7 +61,7 @@ Step dots + title. Steps:
 ### Connections
 
 - Tabs: **Apps & tools** | **MCP servers**
-- Apps: connect / disconnect / test; add custom REST base URL
+- Apps: Hermes Agent, Gmail, Slack, Notion, Sheets, Webhook; connect / disconnect / test; add custom REST base URL
 - MCP: list with transport (local command / SSE / HTTP), turn on/off, test, remove; add form
 - Plain status copy (“Looks good” / “Couldn’t reach it”)
 
