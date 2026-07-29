@@ -36,6 +36,7 @@ uvicorn app.main:app --reload --port 8000
 
 | Document | Purpose |
 |----------|---------|
+| [ui/](ui/) | Desktop UI vision, flows, mockups, prototype handoff |
 | [PROBLEM_AND_SOLUTION.md](PROBLEM_AND_SOLUTION.md) | Problem, value prop, 3-tier matrix |
 | [user-flows.md](user-flows.md) | End-to-end user journeys |
 | [database.md](database.md) | SQLite ER design and table dictionary |

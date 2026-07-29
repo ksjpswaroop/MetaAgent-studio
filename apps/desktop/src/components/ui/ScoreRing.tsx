@@ -1,0 +1,20 @@
+type Props = { value: number; label: string };
+
+export function ScoreRing({ value, label }: Props) {
+  const pct = Math.round(value * 100);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className="grid h-28 w-28 place-items-center rounded-full border-4 border-[var(--vap-cyan)]/40"
+        style={{
+          background: `conic-gradient(var(--vap-cyan) ${pct}%, rgba(255,255,255,0.08) 0)`,
+        }}
+      >
+        <div className="grid h-20 w-20 place-items-center rounded-full bg-[var(--vap-night)] font-display text-2xl font-bold">
+          {pct}
+        </div>
+      </div>
+      <p className="text-xs text-[var(--vap-muted)]">{label}</p>
+    </div>
+  );
+}

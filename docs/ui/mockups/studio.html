@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaAgent Studio — Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="_shared.css" />
+    <style>
+      .steps { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+      .step {
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+        color: var(--vap-muted);
+      }
+      .step.active {
+        border-color: var(--vap-cyan);
+        color: var(--vap-cyan);
+      }
+      .bubble {
+        max-width: 85%;
+        border-radius: 1rem;
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+      .bubble.ai {
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .bubble.me {
+        margin-left: auto;
+        background: rgba(255, 43, 214, 0.8);
+      }
+      .path {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.3rem 0.75rem;
+        font-size: 0.75rem;
+        margin: 0 0.25rem 0.5rem 0;
+      }
+      .path.on { background: var(--vap-cyan); color: var(--vap-night); }
+      .path.off { border: 1px solid var(--glass-border); color: var(--vap-muted); }
+      pre {
+        background: rgba(0, 0, 0, 0.35);
+        border-radius: 0.85rem;
+        padding: 1rem;
+        color: var(--vap-cyan);
+        font-size: 0.75rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="nav">
+        <p class="brand">MetaAgent Studio</p>
+        <p class="eyebrow">vapor studio</p>
+        <a href="home.html">Start</a>
+        <a class="active" href="studio.html">Build my agent</a>
+        <a href="check.html">Make sure it works</a>
+        <a href="kits.html">My saved kits</a>
+      </aside>
+      <main class="main" style="max-width: 48rem">
+        <div class="steps">
+          <span class="step">1 Your idea</span>
+          <span class="step">2 A few questions</span>
+          <span class="step active">3 Approve the plan</span>
+          <span class="step">4 Who does what</span>
+          <span class="step">5 Build the kit</span>
+        </div>
+        <div class="glass">
+          <h2 class="display" style="margin-top: 0">Approve the plan</h2>
+          <div>
+            <span class="path on">Smooth day</span>
+            <span class="path off">Missing pieces</span>
+            <span class="path off">When things break</span>
+          </div>
+          <p class="muted" style="font-size: 0.9rem">
+            Everything arrives complete and tools respond.
+          </p>
+          <pre>Check input → Find notes → Write reply → Send safely</pre>
+          <div style="display: flex; gap: 0.5rem">
+            <button class="btn btn-ghost" type="button">Back</button>
+            <button class="btn btn-mag" type="button">Looks good</button>
+          </div>
+        </div>
+        <div class="glass" style="margin-top: 1rem">
+          <p class="muted" style="font-size: 0.8rem; margin-top: 0">Earlier Q&amp;A</p>
+          <div class="bubble ai">When should this helper wake up?</div>
+          <div class="bubble me">When a message arrives</div>
+        </div>
+        <p class="links">
+          <a href="home.html">← Home</a>
+          <a href="check.html">Check →</a>
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
