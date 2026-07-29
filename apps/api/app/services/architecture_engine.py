@@ -69,12 +69,20 @@ def _normalize_blueprint(data: dict | None, allocations: list[StepAllocation]) -
         if not isinstance(agent, dict):
             continue
         name = agent.get("name") or agent.get("role") or f"Agent {i + 1}"
+        tool_names: list[str] = []
+        for t in agent.get("tools") or []:
+            if isinstance(t, str) and t.strip():
+                tool_names.append(t.strip())
+            elif isinstance(t, dict):
+                tn = t.get("name") or t.get("id")
+                if tn:
+                    tool_names.append(str(tn))
         agents.append(
             {
                 "name": str(name),
                 "role": str(agent.get("role") or name),
                 "system_prompt": str(agent.get("system_prompt") or ""),
-                "tools": agent.get("tools") or [],
+                "tools": tool_names,
                 "model_recommendation": str(agent.get("model_recommendation") or "8B"),
             }
         )
@@ -123,7 +131,9 @@ async def build_architecture(
             system=(
                 "You are SystemArchitectAgent. Return JSON with agents "
                 "[{name,role,system_prompt,tools,model_recommendation}] and tools "
-                "[{name,description,is_side_effecting,parameters,timeout_seconds}]."
+                "[{name,description,is_side_effecting,parameters,timeout_seconds}]. "
+                "Each agent.tools MUST be an array of tool name strings only "
+                "(e.g. [\"http_get\"]), never tool objects."
             ),
             user=json.dumps(
                 [
