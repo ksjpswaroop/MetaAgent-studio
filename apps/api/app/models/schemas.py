@@ -44,6 +44,8 @@ class HealthResponse(BaseModel):
     version: str
     db_ok: bool
     providers_reachable: bool = False
+    demo_unlock: bool = False
+    llm_mode: str = "cassette"
 
 
 class LicenseStatus(BaseModel):

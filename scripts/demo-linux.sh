@@ -42,11 +42,23 @@ else
   source "$API_DIR/.venv/bin/activate"
 fi
 
+# Prefer a clean API with investor demo env (avoid stale cassette processes)
+if curl -sf http://127.0.0.1:8000/health >/dev/null; then
+  MODE=$(curl -s http://127.0.0.1:8000/health | python3 -c "import sys,json; print(json.load(sys.stdin).get('llm_mode',''))" 2>/dev/null || true)
+  DEMO=$(curl -s http://127.0.0.1:8000/health | python3 -c "import sys,json; print(json.load(sys.stdin).get('demo_unlock',False))" 2>/dev/null || true)
+  if [[ "$MODE" != "live" || "$DEMO" != "True" ]]; then
+    echo "==> Stopping stale API on :8000 (want live + demo_unlock)"
+    pkill -f 'uvicorn app.main:app' 2>/dev/null || true
+    sleep 1
+  fi
+fi
+
 if ! curl -sf http://127.0.0.1:8000/health >/dev/null; then
-  echo "==> Starting FastAPI on :8000"
+  echo "==> Starting FastAPI on :8000 (live + demo unlock)"
   (
     cd "$API_DIR"
     METAAGENT_LLM_MODE=live METAAGENT_DEMO_UNLOCK=1 METAAGENT_DB_PATH="$METAAGENT_DB_PATH" \
+      METAAGENT_HTTP_TIMEOUT_SECONDS=120 \
       uvicorn app.main:app --host 127.0.0.1 --port 8000
   ) &
   API_PID=$!
@@ -62,7 +74,7 @@ if ! curl -sf http://127.0.0.1:8000/health >/dev/null; then
     exit 1
   }
 else
-  echo "==> API already running on :8000"
+  echo "==> API already running on :8000 with correct demo env"
 fi
 
 echo "==> Health:"

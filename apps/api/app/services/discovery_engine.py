@@ -90,11 +90,55 @@ async def start_discovery(db: AsyncSession, session: StudioSession) -> list[Disc
     return created
 
 
+def _normalize_scope(raw: dict | None, prompt: str) -> dict:
+    base = {
+        "project_name": (prompt[:48] or "My helper").strip() or "My helper",
+        "primary_goal": prompt[:200] or "Automate workflow",
+        "trigger_type": "manual",
+        "external_tools": ["http_api"],
+        "human_in_loop": True,
+        "fallback_strategy": "queue and retry",
+    }
+    if not isinstance(raw, dict):
+        return base
+    out = {**base, **{k: v for k, v in raw.items() if v is not None and v != ""}}
+    trigger = str(out.get("trigger_type") or "manual").lower()
+    if trigger not in {"webhook", "cron", "manual"}:
+        # Map plain language to enum
+        if "schedule" in trigger or "cron" in trigger:
+            trigger = "cron"
+        elif "message" in trigger or "webhook" in trigger or "arrive" in trigger:
+            trigger = "webhook"
+        else:
+            trigger = "manual"
+    out["trigger_type"] = trigger
+    tools = out.get("external_tools") or []
+    if isinstance(tools, str):
+        tools = [t.strip() for t in tools.split(",") if t.strip()]
+    normalized_tools: list[str] = []
+    if isinstance(tools, list):
+        for t in tools:
+            if isinstance(t, str) and t.strip():
+                normalized_tools.append(t.strip())
+            elif isinstance(t, dict):
+                name = t.get("name") or t.get("tool") or t.get("id")
+                if name:
+                    normalized_tools.append(str(name))
+    out["external_tools"] = normalized_tools or ["http_api"]
+    out["human_in_loop"] = bool(out.get("human_in_loop"))
+    out["project_name"] = str(out.get("project_name") or base["project_name"])[:80]
+    out["primary_goal"] = str(out.get("primary_goal") or base["primary_goal"])
+    out["fallback_strategy"] = str(
+        out.get("fallback_strategy") or base["fallback_strategy"]
+    )
+    return out
+
+
 async def finalize_from_transcript(
     db: AsyncSession, session: StudioSession, override: dict | None = None
 ) -> dict:
     if override:
-        scope = override
+        scope = _normalize_scope(override, session.raw_user_prompt)
     else:
         rows = (
             await db.scalars(
@@ -107,14 +151,22 @@ async def finalize_from_transcript(
             {"role": r.role, "question_key": r.question_key, "content": r.content}
             for r in rows
         ]
-        scope = await chat_json(
-            db,
-            task="discovery_finalize",
-            system="Synthesize a ScopeEnvelope JSON from the Q&A transcript.",
-            user=json.dumps(
-                {"prompt": session.raw_user_prompt, "transcript": transcript}
-            ),
-        )
+        try:
+            raw = await chat_json(
+                db,
+                task="discovery_finalize",
+                system=(
+                    "Synthesize a ScopeEnvelope JSON. Required keys: project_name, "
+                    "primary_goal, trigger_type (webhook|cron|manual), external_tools "
+                    "(array), human_in_loop (bool), fallback_strategy."
+                ),
+                user=json.dumps(
+                    {"prompt": session.raw_user_prompt, "transcript": transcript}
+                ),
+            )
+        except Exception:
+            raw = {}
+        scope = _normalize_scope(raw if isinstance(raw, dict) else {}, session.raw_user_prompt)
 
     existing = await db.scalar(
         select(ScopeEnvelopeRow).where(ScopeEnvelopeRow.session_id == session.id)

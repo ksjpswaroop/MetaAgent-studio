@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "question_key": "trigger_type",
+      "content": "How is this system triggered? (webhook / cron / manual)"
+    },
+    {
+      "question_key": "external_tools",
+      "content": "Which external systems are required?"
+    },
+    {
+      "question_key": "human_in_loop",
+      "content": "Should a human review before side-effects? (yes/no)"
+    },
+    {
+      "question_key": "fallback_strategy",
+      "content": "What happens when an external service fails?"
+    }
+  ]
+}

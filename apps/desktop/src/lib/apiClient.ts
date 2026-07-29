@@ -75,6 +75,8 @@ export type HealthInfo = {
   status: string;
   dbOk: boolean;
   providersReachable: boolean;
+  demoUnlock: boolean;
+  llmMode: string;
 };
 
 const mode = (import.meta.env.VITE_API_MODE as string) || "http";
@@ -106,10 +108,14 @@ function loadSession(): SessionDraft | null {
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const method = init?.method ?? "GET";
   logger.debug("http", `${method} ${path}`);
+  const controller = new AbortController();
+  const timeoutMs = 180_000;
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(`${base}${path}`, {
       headers: { "content-type": "application/json", ...(init?.headers || {}) },
       ...init,
+      signal: controller.signal,
     });
     if (!res.ok) {
       let detail = `${res.status} ${path}`;
@@ -125,8 +131,14 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
   } catch (err) {
-    logger.error("http", `Request failed ${path}`, { error: String(err) });
-    throw err;
+    const msg =
+      err instanceof DOMException && err.name === "AbortError"
+        ? `Request timed out after ${timeoutMs / 1000}s: ${path}`
+        : String(err);
+    logger.error("http", `Request failed ${path}`, { error: msg });
+    throw new Error(msg);
+  } finally {
+    window.clearTimeout(timer);
   }
 }
 
@@ -139,11 +151,15 @@ export const apiClient = {
       status: string;
       db_ok: boolean;
       providers_reachable: boolean;
+      demo_unlock?: boolean;
+      llm_mode?: string;
     }>("/health");
     return {
       status: h.status,
       dbOk: h.db_ok,
       providersReachable: h.providers_reachable,
+      demoUnlock: Boolean(h.demo_unlock),
+      llmMode: h.llm_mode || "cassette",
     };
   },
 

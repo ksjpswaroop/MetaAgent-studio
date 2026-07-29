@@ -172,6 +172,7 @@ export function StudioView({ idea, onBuilt, setStatus }: Props) {
                     setAnswers(next);
                     setAnswer("");
                     if (qIndex + 1 >= questions.length) {
+                      setStatus("Finalizing…");
                       await apiClient.finalizeDiscovery();
                       goStep(2);
                     } else {

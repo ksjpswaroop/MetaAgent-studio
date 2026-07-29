@@ -29,8 +29,14 @@ export function SettingsView() {
 
   useEffect(() => {
     apiClient
+      .health()
+      .then((h) => setDemoUnlocked(h.demoUnlock))
+      .catch(() => undefined);
+    apiClient
       .licenseStatus()
-      .then((s) => setDemoUnlocked(s.features?.includes("demo_unlock") || false))
+      .then((s) => {
+        if (s.features?.includes("demo_unlock")) setDemoUnlocked(true);
+      })
       .catch(() => undefined);
     apiClient
       .listProviders()

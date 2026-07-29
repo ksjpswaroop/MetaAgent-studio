@@ -35,4 +35,6 @@ async def health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         version=__version__,
         db_ok=db_ok,
         providers_reachable=providers_reachable,
+        demo_unlock=settings.demo_unlock,
+        llm_mode=settings.llm_mode,
     )
