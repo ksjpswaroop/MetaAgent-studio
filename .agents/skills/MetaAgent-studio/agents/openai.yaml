@@ -1,0 +1,6 @@
+interface:
+  display_name: "MetaAgent Studio"
+  short_description: "Repo-specific patterns and workflows for MetaAgent-studio"
+  default_prompt: "Use the MetaAgent-studio repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
